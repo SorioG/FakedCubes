@@ -1,0 +1,189 @@
+[gd_scene load_steps=8 format=3 uid="uid://nrgqlhwwg26u"]
+
+[ext_resource type="Script" path="res://scenes/map_editor.gd" id="1_gsom7"]
+[ext_resource type="Texture2D" uid="uid://dfgv02bmqcic7" path="res://assets/sprites/action_icons5.png" id="1_wsjbe"]
+[ext_resource type="TileSet" uid="uid://b4ktibyv5f65a" path="res://assets/tileset.tres" id="2_fwyjl"]
+[ext_resource type="Texture2D" uid="uid://b08h8pxsow8n" path="res://assets/sprites/gameicon.png" id="3_gvt1n"]
+[ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="4_jeabg"]
+[ext_resource type="Texture2D" uid="uid://dbqc3to7ovvor" path="res://assets/sprites/button1.png" id="5_0nlk8"]
+[ext_resource type="Texture2D" uid="uid://tcyps2ap7ylu" path="res://assets/sprites/action_icons6.png" id="6_xoqu2"]
+
+[node name="MapEditor" type="Node2D"]
+script = ExtResource("1_gsom7")
+
+[node name="bg" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorRect" type="ColorRect" parent="bg"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="hud" type="CanvasLayer" parent="."]
+
+[node name="menu" type="PanelContainer" parent="hud"]
+custom_minimum_size = Vector2(0, 50)
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="btns" type="HBoxContainer" parent="hud/menu"]
+layout_mode = 2
+
+[node name="icon" type="TextureRect" parent="hud/menu/btns"]
+texture_filter = 1
+layout_mode = 2
+texture = ExtResource("1_wsjbe")
+
+[node name="sep" type="Control" parent="hud/menu/btns"]
+layout_mode = 2
+
+[node name="filebtn" type="MenuButton" parent="hud/menu/btns"]
+layout_mode = 2
+text = "File"
+switch_on_hover = true
+item_count = 4
+popup/item_0/text = "New"
+popup/item_0/id = 0
+popup/item_1/text = "Save"
+popup/item_1/id = 2
+popup/item_2/text = "Load"
+popup/item_2/id = 1
+popup/item_3/text = "Quit Map Editor"
+popup/item_3/id = 3
+
+[node name="objectbtn" type="MenuButton" parent="hud/menu/btns"]
+layout_mode = 2
+text = "Object"
+switch_on_hover = true
+item_count = 2
+popup/item_0/text = "Add New Object"
+popup/item_0/id = 0
+popup/item_1/text = "Delete All Objects"
+popup/item_1/id = 1
+
+[node name="tools" type="PanelContainer" parent="hud"]
+offset_left = 21.0
+offset_top = 93.0
+offset_right = 163.0
+offset_bottom = 322.0
+
+[node name="btns" type="VBoxContainer" parent="hud/tools"]
+layout_mode = 2
+
+[node name="selectbtn" type="Button" parent="hud/tools/btns"]
+layout_mode = 2
+text = "Select"
+flat = true
+
+[node name="movebtn" type="Button" parent="hud/tools/btns"]
+layout_mode = 2
+text = "Move"
+flat = true
+
+[node name="deletebtn" type="Button" parent="hud/tools/btns"]
+layout_mode = 2
+text = "Delete"
+flat = true
+
+[node name="drawbtn" type="Button" parent="hud/tools/btns"]
+layout_mode = 2
+text = "Draw"
+flat = true
+
+[node name="drawpanel" type="PanelContainer" parent="hud"]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -151.0
+offset_top = 80.0
+offset_right = -16.0
+offset_bottom = 161.0
+grow_horizontal = 0
+
+[node name="btns" type="VBoxContainer" parent="hud/drawpanel"]
+layout_mode = 2
+
+[node name="solidbtn" type="Button" parent="hud/drawpanel/btns"]
+layout_mode = 2
+text = "Solid"
+flat = true
+
+[node name="groundbtn" type="Button" parent="hud/drawpanel/btns"]
+layout_mode = 2
+text = "Ground"
+flat = true
+
+[node name="erasebtn" type="Button" parent="hud/drawpanel/btns"]
+layout_mode = 2
+text = "Erase"
+flat = true
+
+[node name="objecttool" type="PopupMenu" parent="hud"]
+initial_position = 2
+item_count = 4
+item_0/text = "Spawn"
+item_0/icon = ExtResource("3_gvt1n")
+item_0/id = 0
+item_1/text = "Computer"
+item_1/icon = ExtResource("4_jeabg")
+item_1/id = 1
+item_2/text = "Report Button"
+item_2/icon = ExtResource("5_0nlk8")
+item_2/id = 2
+item_3/text = "Custom"
+item_3/icon = ExtResource("6_xoqu2")
+item_3/id = 3
+
+[node name="newfileconfirm" type="ConfirmationDialog" parent="hud"]
+title = "Warning"
+dialog_text = "Are you sure you want to create a new map? All of your progress will be lost!"
+
+[node name="customobjectfile" type="FileDialog" parent="hud"]
+title = "Add Custom Object"
+ok_button_text = "Abrir"
+mode_overrides_title = false
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.png ; PNG Image")
+
+[node name="savemapdiag" type="FileDialog" parent="hud"]
+title = "Save Map"
+mode_overrides_title = false
+access = 1
+filters = PackedStringArray("*.fcmap ; Faked Cubes Map")
+
+[node name="loadmapdiag" type="FileDialog" parent="hud"]
+title = "Save Map"
+size = Vector2i(326, 154)
+mode_overrides_title = false
+file_mode = 0
+access = 1
+filters = PackedStringArray("*.fcmap ; Faked Cubes Map")
+
+[node name="objecttree" type="Tree" parent="hud"]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 21.0
+offset_top = 28.0
+offset_right = 269.0
+offset_bottom = 300.0
+grow_vertical = 2
+
+[node name="map" type="TileMap" parent="."]
+texture_filter = 1
+tile_set = ExtResource("2_fwyjl")
+format = 2
+layer_0/tile_data = PackedInt32Array(-131076, 0, 0, -65540, 0, 0, -4, 0, 0, 65532, 0, 0, 131068, 0, 0, -131075, 0, 0, -65539, 0, 0, -3, 0, 0, 65533, 0, 0, 131069, 0, 0, -131074, 0, 0, -65538, 0, 0, -2, 0, 0, 65534, 0, 0, 131070, 0, 0, -131073, 0, 0, -65537, 0, 0, -1, 0, 0, 65535, 0, 0, 131071, 0, 0, -196608, 0, 0, -131072, 0, 0, -65536, 0, 0, 0, 0, 0, 65536, 0, 0, -196607, 0, 0, -131071, 0, 0, -65535, 0, 0, 1, 0, 0, 65537, 0, 0, -196606, 0, 0, -131070, 0, 0, -65534, 0, 0, 2, 0, 0, 65538, 0, 0, -196613, 65536, 0, -131077, 65536, 0, -65541, 65536, 0, -5, 65536, 0, 65531, 65536, 0, 131067, 65536, 0, 196603, 65536, 0, -196612, 65536, 0, 196604, 65536, 0, -196611, 65536, 0, 196605, 65536, 0, -196610, 65536, 0, 196606, 65536, 0, -196609, 65536, 0, 196607, 65536, 0, -262144, 65536, 0, 131072, 65536, 0, -262143, 65536, 0, 131073, 65536, 0, -262142, 65536, 0, 131074, 65536, 0, -262141, 65536, 0, -196605, 65536, 0, -131069, 65536, 0, -65533, 65536, 0, 3, 65536, 0, 65539, 65536, 0, 131075, 65536, 0)
+
+[node name="camera" type="Camera2D" parent="."]
+
+[node name="spawns" type="Node2D" parent="."]
+
+[node name="objects" type="Node2D" parent="."]

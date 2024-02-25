@@ -1,0 +1,83 @@
+[gd_scene load_steps=3 format=3 uid="uid://dfbk18kcp12t1"]
+
+[ext_resource type="Script" path="res://scenes/server_browser.gd" id="1_70faq"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kriha"]
+font_size = 12
+
+[node name="ServerBrowser" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_70faq")
+
+[node name="tabs" type="TabContainer" parent="."]
+custom_minimum_size = Vector2(0, 600)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+tab_alignment = 1
+
+[node name="LAN" type="ItemList" parent="tabs"]
+layout_mode = 2
+item_count = 1
+item_0/text = "Searching for servers..."
+item_0/selectable = false
+
+[node name="Direct" type="VBoxContainer" parent="tabs"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="ip" type="HBoxContainer" parent="tabs/Direct"]
+layout_mode = 2
+alignment = 1
+
+[node name="label" type="Label" parent="tabs/Direct/ip"]
+layout_mode = 2
+text = "IP: "
+
+[node name="value" type="LineEdit" parent="tabs/Direct/ip"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "127.0.0.1"
+
+[node name="port" type="HBoxContainer" parent="tabs/Direct"]
+layout_mode = 2
+alignment = 1
+
+[node name="label" type="Label" parent="tabs/Direct/port"]
+layout_mode = 2
+text = "Port: "
+
+[node name="value" type="SpinBox" parent="tabs/Direct/port"]
+custom_minimum_size = Vector2(218, 0)
+layout_mode = 2
+min_value = 1024.0
+max_value = 65533.0
+value = 7230.0
+allow_greater = true
+
+[node name="connectbtn" type="Button" parent="tabs/Direct"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Connect"
+
+[node name="warnlabel" type="Label" parent="tabs/Direct"]
+layout_mode = 2
+text = "Please keep in mind that the servers you connect are not official and not controlled by us.
+We are in no way responsible for anything caused by unofficial servers.
+"
+label_settings = SubResource("LabelSettings_kriha")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="listener_timer" type="Timer" parent="."]
+wait_time = 2.0

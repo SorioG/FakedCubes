@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://remwktersa6g"]
+
+[ext_resource type="PackedScene" uid="uid://dp26ah4iltb1q" path="res://scenes/objects/interactable_object.tscn" id="1_stnj3"]
+[ext_resource type="Script" path="res://scenes/objects/lobby_pc.gd" id="2_56rhc"]
+
+[node name="computer" instance=ExtResource("1_stnj3")]
+script = ExtResource("2_56rhc")

@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3 uid="uid://drfhfjym2k26w"]
+
+[ext_resource type="Script" path="res://scenes/objects/lobby_pc.gd" id="1_8bea8"]
+[ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="2_q6lr5"]
+[ext_resource type="Texture2D" uid="uid://dcx05njwsiixq" path="res://assets/sprites/action_icons1.png" id="3_ebsbk"]
+[ext_resource type="AudioStream" uid="uid://d3fvfma21hyby" path="res://assets/sounds/space shield sounds - 7.wav" id="4_xof0m"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_f1s2t"]
+radius = 55.2268
+
+[node name="Computer" type="Node2D"]
+script = ExtResource("1_8bea8")
+
+[node name="sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_q6lr5")
+
+[node name="touch_area" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="touch_area"]
+shape = SubResource("CircleShape2D_f1s2t")
+
+[node name="touch_hint" type="Sprite2D" parent="."]
+position = Vector2(0, -64)
+texture = ExtResource("3_ebsbk")
+
+[node name="used" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_xof0m")

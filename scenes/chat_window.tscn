@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=3 uid="uid://bl2s5ktdlsqvu"]
+
+[ext_resource type="Script" path="res://scenes/chat_window.gd" id="1_gmx8m"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uku52"]
+bg_color = Color(0.14902, 0.14902, 0.14902, 0.537255)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="ChatWindow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gmx8m")
+
+[node name="panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_uku52")
+
+[node name="box" type="VBoxContainer" parent="panel"]
+layout_mode = 2
+alignment = 2
+
+[node name="scroll" type="ScrollContainer" parent="panel/box"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="messages" type="VBoxContainer" parent="panel/box/scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="input" type="LineEdit" parent="panel/box"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "Type any message here.."

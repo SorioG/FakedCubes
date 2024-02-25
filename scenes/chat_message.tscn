@@ -1,0 +1,70 @@
+[gd_scene load_steps=5 format=3 uid="uid://cntlxspd3no5e"]
+
+[ext_resource type="Texture2D" uid="uid://nxre28w4m7x2" path="res://assets/sprites/skin-defaulticon.png" id="1_kn3w8"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jkwyv"]
+bg_color = Color(0.584314, 0.584314, 0.584314, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="LabelSettings" id="LabelSettings_mefdl"]
+font_size = 20
+font_color = Color(0.466667, 0.466667, 0.466667, 1)
+outline_size = 3
+outline_color = Color(0.054902, 0.054902, 0.054902, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_dw2my"]
+outline_size = 3
+outline_color = Color(0.0470588, 0.0470588, 0.0470588, 1)
+shadow_size = 3
+shadow_color = Color(0, 0, 0, 0.321569)
+
+[node name="ChatMessage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="panel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jkwyv")
+
+[node name="box" type="HBoxContainer" parent="panel"]
+layout_mode = 2
+
+[node name="avatar" type="TextureRect" parent="panel/box"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+texture = ExtResource("1_kn3w8")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="info" type="VBoxContainer" parent="panel/box"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="username" type="Label" parent="panel/box/info"]
+layout_mode = 2
+auto_translate = false
+localize_numeral_system = false
+text = "Player Name"
+label_settings = SubResource("LabelSettings_mefdl")
+vertical_alignment = 1
+
+[node name="message" type="Label" parent="panel/box/info"]
+layout_mode = 2
+size_flags_vertical = 3
+auto_translate = false
+localize_numeral_system = false
+text = "Am i stupid?"
+label_settings = SubResource("LabelSettings_dw2my")

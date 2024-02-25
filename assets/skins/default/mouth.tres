@@ -1,0 +1,23 @@
+[gd_resource type="SpriteFrames" load_steps=3 format=3 uid="uid://34tvq1qrogly"]
+
+[ext_resource type="Texture2D" uid="uid://b3jyt0xr5sf4c" path="res://assets/skins/default/mouth1.png" id="1_m0338"]
+[ext_resource type="Texture2D" uid="uid://b0gh73ds1uuht" path="res://assets/skins/default/mouth2.png" id="2_gobt0"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_m0338")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_gobt0")
+}],
+"loop": true,
+"name": &"scared",
+"speed": 5.0
+}]

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://cuc4c8c3c0nrs"
+path="res://.godot/imported/space shield sounds - 2.wav-581a7d20e0d01b3ec97ad26d07d977d4.sample"
+
+[deps]
+
+source_file="res://assets/sounds/space shield sounds - 2.wav"
+dest_files=["res://.godot/imported/space shield sounds - 2.wav-581a7d20e0d01b3ec97ad26d07d977d4.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=0

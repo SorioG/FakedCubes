@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cvb7cm5vgbl8q"]
+
+[ext_resource type="PackedScene" uid="uid://dp26ah4iltb1q" path="res://scenes/objects/interactable_object.tscn" id="1_0gt6w"]
+[ext_resource type="Texture2D" uid="uid://dbqc3to7ovvor" path="res://assets/sprites/button1.png" id="2_larp7"]
+
+[node name="reportbutton" instance=ExtResource("1_0gt6w")]
+
+[node name="sprite" parent="." index="0"]
+texture = ExtResource("2_larp7")
