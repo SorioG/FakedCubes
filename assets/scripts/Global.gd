@@ -130,6 +130,7 @@ var player_skins: Dictionary = {
 }
 
 var custom_skins: Dictionary = {}
+var custom_maps: Dictionary = {}
 
 enum PLAYER_ROLE {
 	NONE = -1,
@@ -153,17 +154,29 @@ var client_info: Dictionary = {
 
 var is_lua_enabled = false # This is used to check if we can use Lua API for our mods (in case if mobile does not work with mods)
 
+var hide_menu = false
+
+var server_config: ConfigFile
+
+var maps_path: String = "user://maps"
+
 func _ready():
 	is_emulating_mobile = ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false) 
 	is_mobile = is_emulating_mobile or OS.has_feature("mobile")
+	is_dedicated_server = OS.has_feature("dedicated_server")
+	
+	if is_dedicated_server:
+		maps_path = OS.get_executable_path().get_base_dir().path_join("maps")
 	
 	#if ClassDB.class_exists("LuaAPI") and ClassDB.is_class_enabled("LuaAPI"):
 	if not OS.has_feature("DisableLua"):
 		print("Lua API enabled.")
 		is_lua_enabled = true
 	
-	DirAccess.make_dir_absolute("user://maps")
+	DirAccess.make_dir_absolute(maps_path)
 	DirAccess.make_dir_absolute("user://skins")
+	
+	load_custom_maps()
 	
 	if not OS.has_feature("dedicated_server"):
 		load_custom_skins()
@@ -202,6 +215,24 @@ func load_custom_skins():
 	else:
 		print("Failed to load custom skins")
 
+func load_custom_maps():
+	var dir = DirAccess.open(maps_path)
+	
+	if dir:
+		dir.list_dir_begin()
+		var filename = dir.get_next()
+		
+		while filename != "":
+			if filename.ends_with(".tscn"):
+				var mapname = filename.split(".")[0]
+				custom_maps[mapname] = maps_path.path_join(filename)
+				
+				print("Loaded custom map: " + mapname)
+			
+			filename = dir.get_next()
+	else:
+		print("Failed to load custom maps")
+
 func change_scene(scene: PackedScene):
 	var err = get_tree().change_scene_to_packed(scene)
 	
@@ -226,13 +257,37 @@ func rand_chance(chanc: float) -> bool:
 	return (randf() > chanc)
 
 func alert(msg: String):
-	var window = AcceptDialog.new()
+	print(msg)
 	
-	window.dialog_text = msg
+	if not Global.is_dedicated_server:
+		var window = AcceptDialog.new()
+		
+		window.dialog_text = msg
+		
+		window.connect("confirmed", window.queue_free)
+		window.dialog_hide_on_ok = false
+		
+		add_child(window)
+		
+		window.popup_centered.call_deferred()
+
+
+func load_server_config():
+	var config := ConfigFile.new()
 	
-	window.connect("confirmed", window.queue_free)
-	window.dialog_hide_on_ok = false
+	var err = config.load(OS.get_executable_path().get_base_dir().path_join("server.cfg"))
 	
-	add_child(window)
+	if err != OK:
+		config.set_value("Game", "gamemode", 0)
+		config.set_value("Game", "max_bots", 0)
+		config.set_value("Game", "lobby_map", "default")
+		config.set_value("Game", "use_custom_maps", [])
+		
+		config.set_value("Server", "port", Global.server_port)
+		config.set_value("Server", "allow_early_join", false)
+		config.set_value("Server", "allow_custom_skins", true)
+		config.set_value("Server", "voice_chat", true)
+		
+		config.save(OS.get_executable_path().get_base_dir().path_join("server.cfg"))
 	
-	window.popup_centered.call_deferred()
+	server_config = config

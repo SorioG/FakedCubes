@@ -16,13 +16,22 @@ var spectate_timer: Timer = Timer.new()
 
 var easter_egg = false
 
+@onready var spbtn = $UI/menu/mbtns/singleplayer
+@onready var hostbtn = $UI/menu/mbtns/hostgame
+@onready var joinbtn = $UI/menu/mbtns/joingame
+
 func _ready():
 	LoadingScreen.hide_screen()
 	$UI/VersionLabel.text = Global.version
 	
-	$UI/menu/mbtns/singleplayer.connect("pressed", _singleplayer_pressed)
-	$UI/menu/mbtns/hostgame.connect("pressed", _host_pressed)
-	$UI/menu/mbtns/joingame.connect("pressed", _join_pressed)
+	if Global.is_mobile:
+		spbtn = $UI/menu/mobilebtns/spbtn
+		hostbtn = $UI/menu/mobilebtns/hostgame
+		joinbtn = $UI/menu/mobilebtns/joingame
+	
+	spbtn.connect("pressed", _singleplayer_pressed)
+	hostbtn.connect("pressed", _host_pressed)
+	joinbtn.connect("pressed", _join_pressed)
 	
 	$UI/menu/mbtns/quitbtn.connect("pressed", get_tree().quit)
 	
@@ -69,17 +78,37 @@ func _ready():
 	
 	$screen1/menu_player/ui.visible = false
 	
-	$music.play()
+	if Global.is_mobile:
+		$UI/menu/mbtns.visible = false
+		
+		$UI/menu/mobilebtns.visible = true
+		
+		$UI/StartLabel.text = tr("Touch Screen")
+	else:
+		$UI/menu/mobilebtns.visible = false
+	
+	if not Global.hide_menu:
+		$music.play()
+	else:
+		$UI.hide()
+		
+		game.handle_arguments()
 
 func _input(event):
+	if Global.hide_menu: return
 	if event.is_pressed() and waiting_input:
 		waiting_input = false
 		animate_menu()
 		$UI/StartLabel.visible = false
-		$UI/StartLogo.visible = false
+		
 		
 		menu.visible = true
-		$UI/ColorRect.visible = true
+		
+		if not Global.is_mobile:
+			$UI/ColorRect.visible = true
+			$UI/StartLogo.visible = false
+		else:
+			$UI/menu/Logo.visible = false
 		
 		#$screen2/camera.enabled = false
 		#$screen1.process_mode = Node.PROCESS_MODE_INHERIT
@@ -128,6 +157,8 @@ func _bot_spawned(plr: Player):
 		plr.set_skin(skin["skin"])
 
 func _game_ended():
+	if Global.hide_menu:
+		get_tree().quit()
 	game.num_bots += randi_range(1, 4)
 
 func _singleplayer_pressed():
@@ -149,15 +180,23 @@ func _join_pressed():
 	serverbrowser.visible = not serverbrowser.visible
 	
 	if serverbrowser.visible:
-		$UI/menu/mbtns/singleplayer.visible = false
-		$UI/menu/mbtns/hostgame.visible = false
+		spbtn.visible = false
+		hostbtn.visible = false
 		$UI/menu/mbtns/mods.visible = false
-		$UI/menu/mbtns/joingame.text = "Back"
+		joinbtn.text = tr("Back")
+		
+		if Global.is_mobile:
+			$UI/menu/mobilebtns.alignment = $UI/menu/mobilebtns.ALIGNMENT_BEGIN
+			$UI/StartLogo.visible = false
 	else:
-		$UI/menu/mbtns/singleplayer.visible = true
-		$UI/menu/mbtns/hostgame.visible = true
+		spbtn.visible = true
+		hostbtn.visible = true
 		$UI/menu/mbtns/mods.visible = true
-		$UI/menu/mbtns/joingame.text = "Join Game"
+		joinbtn.text = tr("Join Game")
+		
+		if Global.is_mobile:
+			$UI/menu/mobilebtns.alignment = $UI/menu/mobilebtns.ALIGNMENT_CENTER
+			$UI/StartLogo.visible = true
 
 func handle_tool_menu(id: int):
 	if id == 0:

@@ -9,12 +9,15 @@ var game: Game
 @onready var actions = $actions
 @onready var gm_options: OptionButton = $gameinfo/tabs/Game/btns/gamemode/option
 @onready var skin_viewport := $gameinfo/tabs/Player/HBoxContainer/skinview/viewport
+@onready var map_options: OptionButton = $gameinfo/tabs/Game/btns/custommap/option
+@onready var cmaplobby = $gameinfo/tabs/Game/btns/cmaplobby
 
 func _ready():
 	
 	game = Global.get_game()
 	
 	setup_skins()
+	setup_custom_maps()
 	setup_gamemodes()
 	
 	if game is Game:
@@ -22,6 +25,7 @@ func _ready():
 	
 	bots_slider.connect("value_changed", _change_bots)
 	gm_options.connect("item_selected", _change_gamemode)
+	map_options.connect("item_selected", _change_custom_map)
 	
 	# Only the host can change the game information
 	if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
@@ -40,6 +44,7 @@ func _ready():
 	actions.get_node("btn4").connect("pressed", _pressed_button.bind(4))
 	
 	$gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom/openskins.connect("pressed", _skin_directory_open)
+	$gameinfo/tabs/Game/btns/cmaplobby.connect("pressed", _custom_map_lobby)
 
 func setup_skins():
 	var skins = Global.player_skins
@@ -87,6 +92,18 @@ func setup_skins():
 			skinlist.add_child(btn)
 	else:
 		skincustom.get_node("Label").text += "\nYou don't have any custom skins."
+
+func setup_custom_maps():
+	var option: OptionButton = $gameinfo/tabs/Game/btns/custommap/option
+	for map in Global.custom_maps:
+		option.add_item(map)
+
+func _change_custom_map(idx: int):
+	if idx == 0:
+		game.is_using_custom_map = false
+	else:
+		game.is_using_custom_map = true
+		game.custom_map_path = Global.custom_maps[map_options.get_item_text(idx)]
 
 func setup_gamemodes():
 	var gamemodes = Global.game_modes
@@ -165,3 +182,13 @@ func _reset_actions():
 
 func _skin_directory_open():
 	OS.shell_open(ProjectSettings.globalize_path("user://skins"))
+
+func _custom_map_lobby():
+	var idx = map_options.selected
+	
+	if idx == 0:
+		game.custom_lobby_path = ""
+	else:
+		game.custom_lobby_path = Global.custom_maps[map_options.get_item_text(idx)]
+	
+	game.change_to_lobby()

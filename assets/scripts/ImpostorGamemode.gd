@@ -22,7 +22,8 @@ func player_join_early(player: Player):
 	player.current_role = Global.PLAYER_ROLE.INNOCENT
 
 func game_start():
-	change_map("impostor1")
+	if not game.is_using_custom_map:
+		change_map("impostor1")
 	
 	var impostor_used: int = 3
 	if game.get_players().size() < 8:

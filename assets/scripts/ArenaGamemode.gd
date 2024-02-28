@@ -28,7 +28,9 @@ func update_actions(_btn1: TextureButton, _btn2: TextureButton, _btn3: TextureBu
 func game_start():
 	kills = 0
 	winner = null
-	change_map("arena")
+	
+	if not game.is_using_custom_map:
+		change_map("arena")
 	
 	max_kills = 5
 	

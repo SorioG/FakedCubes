@@ -52,6 +52,7 @@ func _ready():
 	$hud/customobjectfile.connect("file_selected", add_custom_object)
 	$hud/savemapdiag.connect("file_selected", save_map)
 	$hud/loadmapdiag.connect("file_selected", load_map)
+	$hud/exportdiag.connect("file_selected", export_to_scene)
 
 func _process(_delta):
 	set_cursor()
@@ -126,6 +127,8 @@ func _file_selected(id: int):
 		$hud/savemapdiag.popup_centered_ratio()
 	elif id == 3:
 		Global.change_scene_file("res://scenes/menu_screen.tscn")
+	elif id == 5:
+		$hud/exportdiag.popup_centered_ratio()
 
 func _object_selected(id: int):
 	if id == 0:
@@ -389,3 +392,79 @@ func load_object_json(data: Array, reader: ZIPReader):
 			objects.add_child(sprite)
 			
 			add_collision(sprite)
+
+func export_to_scene(path: String):
+	
+	if spawns.get_child_count() < 1:
+		Global.alert("This map must have player spawns before exporting to a scene")
+		return
+	
+	var base_map = preload("res://scenes/maps/base_map.tscn").instantiate()
+	
+	var tilemap: TileMap = base_map.get_node("TileMap")
+	
+	for cell in map.get_used_cells(0):
+		var id = map.get_cell_source_id(0, cell)
+		var atlas = map.get_cell_atlas_coords(0, cell)
+		
+		tilemap.set_cell(0, cell, id, atlas)
+	
+	var spawns2 = base_map.get_node("spawns")
+	
+	var i = 1
+	for spawn in get_tree().get_nodes_in_group("Spawn"):
+		var nd = Node2D.new()
+		nd.name = "spawn" + str(i)
+		nd.position = spawn.position
+		
+		spawns2.add_child(nd)
+		nd.owner = base_map
+		
+		i += 1
+	
+	var computer = preload("res://scenes/objects/computer.tscn")
+	for comp in get_tree().get_nodes_in_group("Computer"):
+		var clone = computer.instantiate()
+		
+		clone.position = comp.position
+		
+		base_map.add_child(clone)
+		
+		clone.owner = base_map
+	
+	var reportbutton = preload("res://scenes/objects/reportbutton.tscn")
+	for rep in get_tree().get_nodes_in_group("ReportButton"):
+		var clone = reportbutton.instantiate()
+		
+		clone.position = rep.position
+		
+		base_map.add_child(clone)
+		
+		clone.owner = base_map
+	
+	for custom in get_tree().get_nodes_in_group("CustomObject"):
+		var sprite = preload("res://assets/scripts/CustomObject.gd").new()
+		
+		var img: Image = custom.texture.get_image()
+		
+		var buff = img.save_png_to_buffer()
+		
+		sprite.image_data = Marshalls.raw_to_base64(buff)
+		sprite.position = custom.position
+		sprite.name = custom.name
+		
+		base_map.add_child(sprite)
+		sprite.owner = base_map
+	
+	var pscene = PackedScene.new()
+	var err = pscene.pack(base_map)
+	
+	if err != OK:
+		Global.alert("Failed to export to scene: This map cannot be packed")
+		return
+	
+	var res = ResourceSaver.save(pscene, path)
+	if res != OK:
+		Global.alert("Failed to export to scene: Failed to save the scene")
+	else:
+		Global.alert("Successfully exported to scene")

@@ -46,7 +46,7 @@ layout_mode = 2
 layout_mode = 2
 text = "File"
 switch_on_hover = true
-item_count = 4
+item_count = 6
 popup/item_0/text = "New"
 popup/item_0/id = 0
 popup/item_1/text = "Save"
@@ -55,6 +55,11 @@ popup/item_2/text = "Load"
 popup/item_2/id = 1
 popup/item_3/text = "Quit Map Editor"
 popup/item_3/id = 3
+popup/item_4/text = ""
+popup/item_4/id = 4
+popup/item_4/separator = true
+popup/item_5/text = "Export to Scene"
+popup/item_5/id = 5
 
 [node name="objectbtn" type="MenuButton" parent="hud/menu/btns"]
 layout_mode = 2
@@ -70,7 +75,7 @@ popup/item_1/id = 1
 offset_left = 21.0
 offset_top = 93.0
 offset_right = 163.0
-offset_bottom = 322.0
+offset_bottom = 203.0
 
 [node name="btns" type="VBoxContainer" parent="hud/tools"]
 layout_mode = 2
@@ -156,14 +161,25 @@ filters = PackedStringArray("*.png ; PNG Image")
 title = "Save Map"
 mode_overrides_title = false
 access = 1
+root_subfolder = "maps"
 filters = PackedStringArray("*.fcmap ; Faked Cubes Map")
+
+[node name="exportdiag" type="FileDialog" parent="hud"]
+title = "Export to Scene"
+size = Vector2i(326, 154)
+mode_overrides_title = false
+access = 1
+root_subfolder = "maps"
+filters = PackedStringArray("*.tscn ; Text Scenes")
 
 [node name="loadmapdiag" type="FileDialog" parent="hud"]
 title = "Save Map"
 size = Vector2i(326, 154)
+ok_button_text = "Abrir"
 mode_overrides_title = false
 file_mode = 0
 access = 1
+root_subfolder = "maps"
 filters = PackedStringArray("*.fcmap ; Faked Cubes Map")
 
 [node name="objecttree" type="Tree" parent="hud"]

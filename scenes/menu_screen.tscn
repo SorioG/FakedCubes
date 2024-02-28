@@ -1,10 +1,13 @@
-[gd_scene load_steps=12 format=3 uid="uid://k1i5wlt0ju76"]
+[gd_scene load_steps=15 format=3 uid="uid://k1i5wlt0ju76"]
 
 [ext_resource type="Script" path="res://scenes/menu_screen.gd" id="1_38ftq"]
 [ext_resource type="AudioStream" uid="uid://c0kfooh6uqect" path="res://assets/music/fakedcubes_theme_new.ogg" id="2_5ky4d"]
 [ext_resource type="PackedScene" uid="uid://drioxemoktbtr" path="res://scenes/player/player.tscn" id="3_1v1pj"]
 [ext_resource type="Texture2D" uid="uid://ilmyuxi1v6m3" path="res://assets/sprites/logo.png" id="3_egxal"]
+[ext_resource type="Texture2D" uid="uid://dat1rvmtmbl26" path="res://assets/sprites/action_icons8.png" id="4_n7unn"]
 [ext_resource type="Texture2D" uid="uid://bnkt07r1fjiyj" path="res://assets/sprites/action_icons4.png" id="5_g77bi"]
+[ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="5_t0mf4"]
+[ext_resource type="Texture2D" uid="uid://ch0jlbqe5gjh0" path="res://assets/sprites/action_icons7.png" id="6_o5dxp"]
 [ext_resource type="Texture2D" uid="uid://dfgv02bmqcic7" path="res://assets/sprites/action_icons5.png" id="6_rtgfl"]
 [ext_resource type="PackedScene" uid="uid://dfbk18kcp12t1" path="res://scenes/server_browser.tscn" id="6_tvt5c"]
 [ext_resource type="AudioStream" uid="uid://c4hel8s01gyu0" path="res://assets/sounds/select2.ogg" id="8_p6wv7"]
@@ -100,6 +103,42 @@ offset_top = -232.0
 offset_right = 350.0
 offset_bottom = -82.0
 texture = ExtResource("3_egxal")
+
+[node name="mobilebtns" type="HBoxContainer" parent="UI/menu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 2.625
+anchor_right = 28.8
+anchor_bottom = 5.65
+alignment = 1
+
+[node name="spbtn" type="Button" parent="UI/menu/mobilebtns"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Local Game"
+icon = ExtResource("4_n7unn")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
+
+[node name="hostgame" type="Button" parent="UI/menu/mobilebtns"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Host Game"
+icon = ExtResource("5_t0mf4")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
+
+[node name="joingame" type="Button" parent="UI/menu/mobilebtns"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Join Game"
+icon = ExtResource("6_o5dxp")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="ToolsMenu" type="PopupMenu" parent="UI"]
 title = "Developer Tools"

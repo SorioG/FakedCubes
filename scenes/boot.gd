@@ -11,6 +11,8 @@ func _ready():
 		Global.is_dedicated_server = true
 		Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_HOST
 		
+		Global.load_server_config()
+		
 		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
 		
 	elif "--server" in OS.get_cmdline_args():
@@ -29,7 +31,7 @@ func _ready():
 			Global.change_scene_file.call_deferred("res://scenes/menu_screen.tscn")
 
 func handle_arguments() -> bool:
-	var i = 0
+	var _i = 0
 	var args = OS.get_cmdline_args()
 	var handled = false
 	for arg in args:
@@ -37,6 +39,10 @@ func handle_arguments() -> bool:
 			handled = true
 			Global.change_scene_file.call_deferred("res://scenes/map_editor.tscn")
 		
-		i += 1
+		if arg == "--record-mode":
+			print("Record Mode enabled - Recommended to use godot's built-in recorder or any other recording software")
+			Global.hide_menu = true
+		
+		_i += 1
 	
 	return handled

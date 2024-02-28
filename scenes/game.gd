@@ -72,6 +72,13 @@ var server_info: Dictionary = {
 
 var dediserver_confirmed = false
 
+var is_using_custom_map = false
+var custom_map_path: String = ""
+
+var current_map_path: String = ""
+
+var custom_lobby_path: String = ""
+
 signal local_player_used_action(action: int)
 signal game_ended
 
@@ -125,7 +132,7 @@ func _ready():
 	$hud/chat.connect("pressed", _show_chat_window)
 	
 	if net_mode == Global.GAME_TYPE.SINGLEPLAYER:
-		_change_map("lobby")
+		change_to_lobby()
 		
 		if spawn_local_player:
 			local_player = spawn_player(true, "Player1")
@@ -141,7 +148,7 @@ func _ready():
 		peer.create_server(Global.server_port)
 		multiplayer.multiplayer_peer = peer
 		
-		change_map.rpc("lobby")
+		change_to_lobby()
 		
 		#net_spawn_player.rpc(multiplayer.get_unique_id())
 		
@@ -170,7 +177,7 @@ func _ready():
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		$hud/lobby_ui/StartButton.visible = false
 		
-		LoadingScreen.music.play()
+		#LoadingScreen.music.play()
 		LoadingScreen.show_screen()
 		LoadingScreen.loadlabel.text = "Connecting to the server..."
 		
@@ -189,7 +196,27 @@ func _ready():
 	$dediserver_timer.connect("timeout", dediserver_autostart)
 	
 	if Global.is_dedicated_server:
+		parse_server_config()
+		
 		$dediserver_timer.start()
+
+func parse_server_config():
+	var config: ConfigFile = Global.server_config
+	
+	if not config: return
+	
+	var lobby_map = config.get_value("Game", "lobby_map", "default")
+	
+	if lobby_map != "default":
+		custom_lobby_path = Global.maps_path.path_join(lobby_map + ".tscn")
+		
+		change_to_lobby()
+
+func change_to_lobby():
+	if custom_lobby_path.is_empty():
+		_change_map("lobby")
+	else:
+		load_custom_map(custom_lobby_path)
 
 func dediserver_autostart():
 	if game_state == STATE.INGAME: return
@@ -233,7 +260,17 @@ func net_server_message(msg: String):
 
 func _on_peer_joined(id: int):
 	if multiplayer.is_server():
-		change_map.rpc_id(id, current_map.name)
+		if is_using_custom_map and not current_map_path.is_empty():
+			var file = FileAccess.open(current_map_path, FileAccess.READ)
+			
+			var netdata = Marshalls.raw_to_base64(file.get_buffer(file.get_length()))
+			
+			net_download_map.rpc_id(id, netdata)
+			
+			file.close()
+		else:
+			change_map.rpc_id(id, current_map.name)
+		
 		net_change_gamemode.rpc_id(id, gamemode_idx)
 		multi_spawner.spawn(id)
 	
@@ -336,6 +373,9 @@ func change_map(m: String):
 	if is_instance_valid(current_map):
 		current_map.free()
 	
+	current_map_path = ""
+	is_using_custom_map = false
+	
 	current_map = Global.maps[m].instantiate()
 	
 	current_map.name = m
@@ -380,6 +420,9 @@ func net_spawn_player(id):
 	
 	emit_signal("player_spawned", player)
 	
+	if multiplayer.is_server():
+		player.position = get_random_spawn().position
+	
 	return player
 
 @rpc("authority", "call_remote", "reliable")
@@ -419,6 +462,9 @@ func _on_start_pressed():
 		multiplayer.multiplayer_peer.refuse_new_connections = true
 		
 		print("[Server] This server is now refusing connections.")
+	
+	if is_using_custom_map:
+		load_custom_map(custom_map_path)
 	
 	gamemode_node.game_start()
 	
@@ -475,7 +521,7 @@ func show_role_reveal():
 	$hud/role_reveal/hide_timer.start()
 
 func end_game():
-	_change_map("lobby")
+	change_to_lobby()
 	
 	print("[Game] The game has now ended. (Winning Role: " + str(winning_role) + ")")
 	
@@ -573,7 +619,7 @@ func net_change_gamemode(id: int):
 	current_gamemode = Global.game_modes[id]
 
 func _enable_microphone():
-	if Global.is_mobile:
+	if Global.is_mobile and not Global.is_emulating_mobile:
 		if not OS.request_permission("RECORD_AUDIO"): return
 	
 	if local_player.vc_input.playing:
@@ -656,3 +702,46 @@ func handle_arguments():
 				print("Changed gamemode to " + current_gamemode["name"])
 		
 		i += 1
+
+
+func load_custom_map(path: String):
+	if is_instance_valid(current_map):
+		current_map.free()
+	
+	var map = ResourceLoader.load(path, "PackedScene")
+	
+	if map is PackedScene:
+		var cmap = map.instantiate()
+		
+		current_map = cmap
+		
+		current_map_path = path
+		
+		$map.add_child(cmap)
+		
+		move_players()
+		
+		if multiplayer.is_server():
+			var file = FileAccess.open(path, FileAccess.READ)
+			
+			var netdata = Marshalls.raw_to_base64(file.get_buffer(file.get_length()))
+			
+			net_download_map.rpc(netdata)
+			
+			file.close()
+
+@rpc("call_remote", "reliable")
+func net_download_map(file: String):
+	var data = Marshalls.base64_to_raw(file)
+	
+	DirAccess.make_dir_absolute("user://net_downloads")
+	
+	var path = "user://net_downloads/" + file.md5_text() + ".tscn"
+	
+	var map = FileAccess.open(path, FileAccess.WRITE)
+	
+	map.store_buffer(data)
+	
+	map.close()
+	
+	load_custom_map.call_deferred(path)
