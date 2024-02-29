@@ -71,6 +71,14 @@ popup/item_0/id = 0
 popup/item_1/text = "Delete All Objects"
 popup/item_1/id = 1
 
+[node name="gamebtn" type="MenuButton" parent="hud/menu/btns"]
+layout_mode = 2
+text = "Game"
+switch_on_hover = true
+item_count = 1
+popup/item_0/text = "Playtest"
+popup/item_0/id = 0
+
 [node name="tools" type="PanelContainer" parent="hud"]
 offset_left = 21.0
 offset_top = 93.0
@@ -151,7 +159,6 @@ dialog_text = "Are you sure you want to create a new map? All of your progress w
 
 [node name="customobjectfile" type="FileDialog" parent="hud"]
 title = "Add Custom Object"
-ok_button_text = "Abrir"
 mode_overrides_title = false
 file_mode = 0
 access = 2
@@ -175,7 +182,6 @@ filters = PackedStringArray("*.tscn ; Text Scenes")
 [node name="loadmapdiag" type="FileDialog" parent="hud"]
 title = "Save Map"
 size = Vector2i(326, 154)
-ok_button_text = "Abrir"
 mode_overrides_title = false
 file_mode = 0
 access = 1
@@ -183,6 +189,7 @@ root_subfolder = "maps"
 filters = PackedStringArray("*.fcmap ; Faked Cubes Map")
 
 [node name="objecttree" type="Tree" parent="hud"]
+visible = false
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
@@ -191,6 +198,13 @@ offset_top = 28.0
 offset_right = 269.0
 offset_bottom = 300.0
 grow_vertical = 2
+
+[node name="gamemodemenu" type="PopupMenu" parent="hud"]
+initial_position = 2
+item_count = 1
+item_0/text = "Lobby"
+item_0/icon = ExtResource("4_jeabg")
+item_0/id = 0
 
 [node name="map" type="TileMap" parent="."]
 texture_filter = 1

@@ -32,6 +32,12 @@ var starting_pos: Vector2
 
 var is_drawing: bool = false
 
+var is_following_player = false
+
+var current_game: Game
+
+var gamemode: int
+
 func _ready():
 	$hud/tools/btns/selectbtn.connect("pressed", set_tool.bind(TOOL.SELECT))
 	$hud/tools/btns/movebtn.connect("pressed", set_tool.bind(TOOL.MOVE))
@@ -44,8 +50,10 @@ func _ready():
 	
 	$hud/menu/btns/filebtn.get_popup().connect("id_pressed", _file_selected)
 	$hud/menu/btns/objectbtn.get_popup().connect("id_pressed", _object_selected)
+	$hud/menu/btns/gamebtn.get_popup().connect("id_pressed", _game_pressed)
 	
 	$hud/objecttool.connect("id_pressed", _object_tool_selected)
+	$hud/gamemodemenu.connect("id_pressed", _gamemode_pressed)
 	
 	$hud/newfileconfirm.connect("confirmed", get_tree().reload_current_scene)
 	
@@ -53,12 +61,30 @@ func _ready():
 	$hud/savemapdiag.connect("file_selected", save_map)
 	$hud/loadmapdiag.connect("file_selected", load_map)
 	$hud/exportdiag.connect("file_selected", export_to_scene)
+	
+	setup_gamemodes()
 
 func _process(_delta):
 	set_cursor()
 	
 	if current_tool == TOOL.DRAW and is_drawing:
 		draw_tile()
+	
+	if is_instance_valid(current_game):
+		if is_following_player:
+			if current_game.local_player:
+				camera.position = current_game.local_player.position
+			
+			if is_mouse_pressed:
+				is_following_player = false
+		else:
+			if current_game.local_player:
+				if current_game.local_player.velocity != Vector2.ZERO:
+					is_following_player = true
+		
+		$hud/tools.visible = false
+	else:
+		$hud/tools.visible = true
 
 func draw_tile():
 	var pos = map.local_to_map(get_local_mouse_position())
@@ -148,7 +174,7 @@ func _object_tool_selected(id: int):
 		sprite.add_to_group("Spawn", true)
 		objects.add_child(sprite)
 		
-		add_collision(sprite)
+		#add_collision(sprite)
 	elif id == 1:
 		var sprite = Sprite2D.new()
 		sprite.texture = load("res://assets/sprites/computer.png")
@@ -156,7 +182,7 @@ func _object_tool_selected(id: int):
 		sprite.add_to_group("Computer", true)
 		objects.add_child(sprite)
 		
-		add_collision(sprite)
+		#add_collision(sprite)
 	elif id == 2:
 		var sprite = Sprite2D.new()
 		sprite.texture = load("res://assets/sprites/button1.png")
@@ -164,9 +190,112 @@ func _object_tool_selected(id: int):
 		sprite.add_to_group("ReportButton", true)
 		objects.add_child(sprite)
 		
-		add_collision(sprite)
+		#add_collision(sprite)
 	elif id == 3:
 		$hud/customobjectfile.popup_centered_ratio()
+
+func _game_pressed(id: int):
+	if id == 0:
+		if is_instance_valid(current_game):
+			playtest()
+		else:
+			$hud/gamemodemenu.popup()
+
+func _gamemode_pressed(id: int):
+	var text = $hud/gamemodemenu.get_item_text(id)
+	
+	if text == "Lobby":
+		gamemode = -1
+	else:
+		gamemode = id-1
+	
+	playtest()
+
+func playtest():
+	if is_instance_valid(current_game):
+		is_following_player = false
+		
+		current_game.queue_free()
+		
+		$hud/menu/btns/gamebtn.get_popup().set_item_text(0, "Playtest")
+		$hud/menu/btns/objectbtn.disabled = false
+		$hud/menu/btns/filebtn.disabled = false
+		
+		$map.visible = true
+		$spawns.visible = true
+		$objects.visible = true
+	else:
+		if get_tree().get_nodes_in_group("Spawn").size() < 1:
+			Global.alert("This map must have player spawns before playtesting")
+			return
+		
+		var scene := get_packed_scene()
+		
+		if scene == null:
+			Global.alert("Cannot playtest the map.")
+			return
+		
+		var game = Global.GAME_NODE.instantiate()
+		game.num_bots = 0
+		
+		if gamemode == -1:
+			game.get_node("hud").visible = false
+		
+		Global.net_mode = Global.GAME_TYPE.SINGLEPLAYER
+		
+		add_child(game)
+		
+		if is_instance_valid(game.current_map):
+			game.current_map.free()
+		
+		var cmap = scene.instantiate()
+		
+		game.is_using_custom_map = true
+		
+		game.current_map = cmap
+		
+		game.can_change_map = false
+		
+		game.get_node("map").add_child(cmap)
+		
+		game.move_players()
+		
+		game.connect("player_spawned", _player_spawned_signal)
+		game.connect("game_ended", _game_ended)
+		
+		current_game = game
+		
+		is_following_player = true
+		
+		current_tool = TOOL.SELECT
+		
+		$hud/menu/btns/gamebtn.get_popup().set_item_text(0, "Stop Playtesting")
+		$hud/menu/btns/objectbtn.disabled = true
+		$hud/menu/btns/filebtn.disabled = true
+		
+		$map.visible = false
+		$spawns.visible = false
+		$objects.visible = false
+		
+		if gamemode != -1:
+			game.current_gamemode = Global.game_modes[gamemode]
+			
+			var numbots = 1
+			while game.can_start_game() != "OK":
+				game.spawn_player(false, "Bot" + str(numbots), true, true)
+				
+				numbots += 1
+				#game.num_bots += 1
+			
+			game._on_start_pressed.call_deferred()
+
+func _player_spawned_signal(_plr: Player):
+	pass
+
+func _game_ended():
+	Global.alert("This gamemode has now ended.")
+	
+	playtest()
 
 func add_custom_object(path: String):
 	var image = Image.load_from_file(path)
@@ -180,7 +309,7 @@ func add_custom_object(path: String):
 	sprite.add_to_group("CustomObject", true)
 	objects.add_child(sprite)
 	
-	add_collision(sprite)
+	#add_collision(sprite)
 
 func add_collision(node: Sprite2D):
 	var area = Area2D.new()
@@ -393,12 +522,35 @@ func load_object_json(data: Array, reader: ZIPReader):
 			
 			add_collision(sprite)
 
+func setup_gamemodes():
+	var gamemodes = Global.game_modes
+	
+	var gm_options: PopupMenu = $hud/gamemodemenu
+	
+	#gm_options.clear()
+	
+	for gm in gamemodes:
+		gm_options.add_icon_item(gm["icon"], gm["name"])
+
 func export_to_scene(path: String):
 	
-	if spawns.get_child_count() < 1:
+	if get_tree().get_nodes_in_group("Spawn").size() < 1:
 		Global.alert("This map must have player spawns before exporting to a scene")
 		return
 	
+	var pscene = get_packed_scene()
+	
+	if pscene == null:
+		Global.alert("Failed to export to scene: This map cannot be packed")
+		return
+	
+	var res = ResourceSaver.save(pscene, path)
+	if res != OK:
+		Global.alert("Failed to export to scene: Failed to save the scene")
+	else:
+		Global.alert("Successfully exported to scene")
+
+func get_packed_scene() -> PackedScene:
 	var base_map = preload("res://scenes/maps/base_map.tscn").instantiate()
 	
 	var tilemap: TileMap = base_map.get_node("TileMap")
@@ -460,11 +612,7 @@ func export_to_scene(path: String):
 	var err = pscene.pack(base_map)
 	
 	if err != OK:
-		Global.alert("Failed to export to scene: This map cannot be packed")
-		return
+		#Global.alert("Failed to export to scene: This map cannot be packed")
+		return null
 	
-	var res = ResourceSaver.save(pscene, path)
-	if res != OK:
-		Global.alert("Failed to export to scene: Failed to save the scene")
-	else:
-		Global.alert("Successfully exported to scene")
+	return pscene

@@ -79,6 +79,8 @@ var current_map_path: String = ""
 
 var custom_lobby_path: String = ""
 
+@export var can_change_map = true
+
 signal local_player_used_action(action: int)
 signal game_ended
 
@@ -463,7 +465,7 @@ func _on_start_pressed():
 		
 		print("[Server] This server is now refusing connections.")
 	
-	if is_using_custom_map:
+	if is_using_custom_map and can_change_map:
 		load_custom_map(custom_map_path)
 	
 	gamemode_node.game_start()
