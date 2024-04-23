@@ -17,6 +17,7 @@ func _ready():
 	game = Global.get_game()
 	
 	setup_skins()
+	setup_hats()
 	setup_custom_maps()
 	setup_gamemodes()
 	
@@ -36,14 +37,19 @@ func _ready():
 	
 	if Global.is_mobile:
 		actions.custom_minimum_size = Vector2(0, 200)
-		actions.position.x -= 100
+		actions.position.x -= 60
 	
 	actions.get_node("btn1").connect("pressed", _pressed_button.bind(1))
 	actions.get_node("btn2").connect("pressed", _pressed_button.bind(2))
 	actions.get_node("btn3").connect("pressed", _pressed_button.bind(3))
 	actions.get_node("btn4").connect("pressed", _pressed_button.bind(4))
 	
-	$gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom/openskins.connect("pressed", _skin_directory_open)
+	if Global.is_mobile:
+		for btn in actions.get_children():
+			if btn is TextureButton:
+				btn.custom_minimum_size = Vector2(96, 0)
+	
+	$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom/openskins.connect("pressed", _skin_directory_open)
 	$gameinfo/tabs/Game/btns/cmaplobby.connect("pressed", _custom_map_lobby)
 
 func setup_skins():
@@ -55,7 +61,7 @@ func setup_skins():
 		
 		var btn = TextureButton.new()
 		
-		var skinlist = $gameinfo/tabs/Player/skinlist/VBoxContainer/skinbuiltin/skins
+		var skinlist = $gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skinbuiltin/skins
 		
 		btn.name = s
 		#btn.text = s
@@ -69,7 +75,7 @@ func setup_skins():
 		
 		skinlist.add_child(btn)
 	
-	var skincustom = $gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom
+	var skincustom = $gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom
 	
 	if Global.custom_skins.size() > 0:
 		for s in custom_skins:
@@ -77,7 +83,7 @@ func setup_skins():
 			
 			var btn = TextureButton.new()
 			
-			var skinlist = $gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom/skins
+			var skinlist = $gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom/skins
 			
 			btn.name = s
 			#btn.text = s
@@ -92,6 +98,30 @@ func setup_skins():
 			skinlist.add_child(btn)
 	else:
 		skincustom.get_node("Label").text += "\nYou don't have any custom skins."
+
+func setup_hats():
+	var hats = GameData.player_hats
+	
+	for hat in hats:
+		var h = hats[hat]
+		
+		var btn = TextureButton.new()
+		
+		var hatlist = $gameinfo/tabs/Player/TabContainer/Hats/hatlist
+		
+		btn.name = hat
+		btn.tooltip_text = hat
+		
+		btn.texture_normal = load("res://assets/sprites/hats/playerbase.png")
+		
+		var texrect = TextureRect.new()
+		texrect.texture = h
+		
+		btn.connect("pressed", _on_hat_press.bind(hat))
+		
+		btn.add_child(texrect)
+		
+		hatlist.add_child(btn)
 
 func setup_custom_maps():
 	var option: OptionButton = $gameinfo/tabs/Game/btns/custommap/option
@@ -124,6 +154,15 @@ func _change_gamemode(index: int):
 func _on_skin_press(nam: String):
 	game.local_player.net_set_skin.rpc(nam)
 	
+	Global.client_info["skin"] = nam
+	
+	$select2.play()
+
+func _on_hat_press(nam: String):
+	game.local_player.net_set_hat.rpc(nam)
+	
+	Global.client_info["hat"] = nam
+	
 	$select2.play()
 
 func _on_custom_skin(nam: String):
@@ -136,6 +175,8 @@ func _on_custom_skin(nam: String):
 	var buff = img.save_png_to_buffer()
 	
 	player.net_load_custom_skin.rpc(Marshalls.raw_to_base64(buff))
+	
+	Global.client_info["skin"] = "custom:" + nam
 	
 	$select2.play()
 
@@ -154,11 +195,13 @@ func _process(_delta):
 	var is_starting: bool
 	if game:
 		is_starting = (game.game_state == game.STATE.INGAME)
+		
+		$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom.visible = game.is_custom_skins_allowed
 	else:
 		is_starting = false
 	
 	
-	if not is_starting:
+	if not is_starting and is_instance_valid(player):
 		actions.get_node("btn1").visible = true
 		
 		actions.get_node("btn2").visible = false
@@ -167,7 +210,8 @@ func _process(_delta):
 	else:
 		#if gamemode["base"] ==  "impostor":
 		#	actions.get_node("btn2").visible = (player.current_role == Global.PLAYER_ROLE.IMPOSTOR)
-		game.gamemode_node.update_actions(actions.get_node("btn1"),actions.get_node("btn2"),actions.get_node("btn3"),actions.get_node("btn4"))
+		if game:
+			game.gamemode_node.update_actions(actions.get_node("btn1"),actions.get_node("btn2"),actions.get_node("btn3"),actions.get_node("btn4"))
 
 func _opened_window():
 	pass

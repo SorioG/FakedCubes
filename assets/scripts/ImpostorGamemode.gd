@@ -119,8 +119,7 @@ func player_do_action(_player: Player, _action: int):
 			if plr.is_killed: continue
 			if plr.current_role == Global.PLAYER_ROLE.IMPOSTOR: continue
 			
-			plr.is_killed = true
-			plr.animation.play("death")
+			plr.kill_player()
 			
 			_player.kill_cooldown = 500
 			break

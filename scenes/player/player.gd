@@ -21,6 +21,7 @@ class_name Player
 @export var current_role: int = Global.PLAYER_ROLE.NONE
 
 @export var skin_name: String = "Default"
+@export var hat_name: String = "None"
 
 @export var has_spawned = false
 @export var net_id = 1
@@ -45,6 +46,9 @@ var is_disappearing = false
 @export var is_voicing: bool = false
 
 const MAX_VELOCITY = 300
+const MAX_SPRINT_VELOCITY = 500
+
+@export var is_running = false
 
 var bot_move_x = 0.0
 var bot_move_y = 0.0
@@ -53,6 +57,7 @@ var impostor_chance = 0.0
 
 @export var kill_cooldown: int = 0
 
+# Experimental Voice Chat
 var vc_max_buffer: int = 512
 
 var vc_idx: int
@@ -81,6 +86,21 @@ func get_skin() -> Texture2D:
 	
 	return $Character/Body.texture
 
+func set_hat(tex: Texture2D) -> bool:
+	if not tex is Texture2D: return false
+	
+	$Character/Body/Hat.texture = tex
+	
+	if is_local_player:
+		var viewport = $ui/HUD/gameinfo/tabs/Player/HBoxContainer/skinview/viewport
+		
+		viewport.get_node("Hat").texture = tex
+	
+	return true
+
+func get_hat() -> Texture2D:
+	return $Character/Body/Hat.texture
+
 @rpc("any_peer","call_local","reliable")
 func net_set_skin(nam: String):
 	
@@ -92,6 +112,17 @@ func net_set_skin(nam: String):
 	
 	set_skin(skin)
 	skin_name = nam
+
+@rpc("any_peer","call_local","reliable")
+func net_set_hat(nam: String):
+	if not GameData.player_hats.has(nam):
+		print("[WARN] " + player_name + " attempted to set a hat that does not exist (name: " + nam + ")")
+		return
+	
+	var hat = GameData.player_hats[nam]
+	
+	set_hat(hat)
+	hat_name = nam
 
 func set_face(face: Global.FACE_TYPE, mood: int):
 	var sprite: Sprite2D
@@ -112,7 +143,7 @@ func _ready():
 		c_game = get_game()
 	
 	
-	if can_have_authority:
+	if can_have_authority and c_game:
 		if c_game.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
 			if is_multiplayer_authority():
 				is_local_player = true
@@ -138,18 +169,28 @@ func _ready():
 	
 	$username.text = player_name
 	
+	if is_local_player:
+		MusicManager.fade_out()
+		
+		net_set_skin.rpc(Global.client_info["skin"])
+		net_set_hat.rpc(Global.client_info["hat"])
+		
+		player_name = Global.client_info["username"]
+	
 	if start_flipped:
 		$Character.scale.x = -1
 	
 	if is_bot and c_game.bot_change_skin:
-		#set_skin(Global.player_skins.values().pick_random())
 		set_skin(Global.BOT_SKIN)
 	
 	if has_spawned:
 		animation.play("appear")
 		has_spawned = false
 	
+	if Global.is_mobile:
+		$camera.zoom += Vector2(0.3, 0.3)
 	
+	ModLoader.call_hook("player_spawn", [self, has_spawned])
 
 
 func _physics_process(_delta):
@@ -190,6 +231,8 @@ func _physics_process(_delta):
 			elif Input.is_action_just_pressed(action_prefix+"action3"):
 				_do_action(4)
 			
+			is_running = Input.is_action_pressed("run")
+			
 			if is_instance_valid(c_game):
 				if c_game.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
 					manual_move_x = move_x
@@ -227,7 +270,10 @@ func _physics_process(_delta):
 		if c_game.game_state == c_game.STATE.LOBBY:
 			is_killed = false
 	
-	velocity = Vector2(move_x, move_y) * MAX_VELOCITY
+	if is_running:
+		velocity = Vector2(move_x, move_y) * MAX_SPRINT_VELOCITY
+	else:
+		velocity = Vector2(move_x, move_y) * MAX_VELOCITY
 	
 	
 	move_and_slide()
@@ -253,7 +299,10 @@ func set_animation():
 			is_idle = true
 	else:
 		is_idle = false
-		animation.play("walk")
+		if is_running:
+			animation.play("sprint")
+		else:
+			animation.play("walk")
 	
 
 func get_game() -> Game:
@@ -285,7 +334,7 @@ func bot_tick() -> Array[int]:
 	if game.game_state == game.STATE.LOBBY:
 		# In Lobby: Just wander around, nothing else to do.
 		bot_walk_rand()
-		
+		is_running = false
 	elif game.game_state == game.STATE.INGAME:
 		if game.get_node("hud/role_reveal").visible:
 			bot_move_x = 0
@@ -406,3 +455,9 @@ func net_load_custom_skin(_skin: String):
 	
 	skin_name = "Custom"
 	custom_skin_data = _skin
+
+func kill_player():
+	is_killed = true
+	animation.play("death")
+	
+	ModLoader.call_hook("player_died", [self])

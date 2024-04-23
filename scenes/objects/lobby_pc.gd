@@ -9,4 +9,4 @@ func on_used(action: int):
 		gameinfo.get_node("tabs").current_tab = 0
 		
 		if not Global.is_mobile:
-			gameinfo.get_node("tabs/Player/skinlist/VBoxContainer/skinbuiltin/skins").get_children()[0].grab_focus()
+			gameinfo.get_node("tabs/Player/TabContainer/Skin/VBoxContainer/skinbuiltin/skins").get_children()[0].grab_focus()

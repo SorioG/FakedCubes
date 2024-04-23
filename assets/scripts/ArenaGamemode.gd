@@ -96,6 +96,7 @@ func player_do_action(_player: Player, _action: int):
 			if plr.is_killed: continue
 			if protection_timer.has(plr): continue
 			
+			
 			if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 				player_health[plr] -= 10
 				plr.kill_cooldown += 2
@@ -104,9 +105,6 @@ func player_do_action(_player: Player, _action: int):
 			
 			if player_health[plr] < 1:
 				plr.kill_cooldown = 100
-				
-				plr.is_killed = true
-				#plr.animation.play("death")
 				
 				game.custom_rpc.rpc({"type": "death", "name": plr.name})
 				
@@ -140,7 +138,12 @@ func bot_tick(bot: Player):
 	bot.bot_walk_rand()
 	
 	if (bot.get_players_nearby().size() > 0):
+		if player_health[bot] <= 10:
+			bot.is_running = true
+		
 		bot.bot_try_kill()
+	else:
+		bot.is_running = true
 
 func show_results(label: Label, player: Player):
 	if is_instance_valid(winner):
@@ -184,8 +187,7 @@ func receive_custom_rpc(_data: Dictionary, _id: int):
 		if player is Player:
 			player.kill_cooldown = 100
 			
-			#player.is_killed = true
-			player.animation.play("death")
+			player.kill_player()
 	
 	if _data["type"] == "winner" and _id == 1:
 		var player = game.players_node.get_node_or_null(NodePath(_data["name"]))

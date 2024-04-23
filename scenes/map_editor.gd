@@ -63,6 +63,11 @@ func _ready():
 	$hud/exportdiag.connect("file_selected", export_to_scene)
 	
 	setup_gamemodes()
+	
+	# Warn the user before making the map with mods enabled
+	if Global.has_mods_enabled:
+		Global.alert("It's highly recommended that you disable mods before making one, unless you want to use them.\n
+					This might cause some problems when trying to save/load the maps")
 
 func _process(_delta):
 	set_cursor()
@@ -194,6 +199,9 @@ func _object_tool_selected(id: int):
 	elif id == 3:
 		$hud/customobjectfile.popup_centered_ratio()
 
+func add_object_to_list(node: Node2D):
+	pass
+
 func _game_pressed(id: int):
 	if id == 0:
 		if is_instance_valid(current_game):
@@ -237,6 +245,8 @@ func playtest():
 		
 		var game = Global.GAME_NODE.instantiate()
 		game.num_bots = 0
+		
+		game.get_node("hud/menu").visible = false
 		
 		if gamemode == -1:
 			game.get_node("hud").visible = false

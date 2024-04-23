@@ -1,0 +1,59 @@
+[gd_scene load_steps=3 format=3 uid="uid://ivgg08noi2w0"]
+
+[ext_resource type="Texture2D" uid="uid://tcyps2ap7ylu" path="res://assets/sprites/action_icons6.png" id="1_tc4ph"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_q15yq"]
+font_size = 28
+outline_size = 2
+outline_color = Color(0.0117647, 0.0117647, 0.0117647, 1)
+shadow_size = 2
+
+[node name="ModItem" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="item" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="icon" type="TextureRect" parent="item"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+texture = ExtResource("1_tc4ph")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="info" type="VBoxContainer" parent="item"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="name" type="Label" parent="item/info"]
+layout_mode = 2
+mouse_filter = 1
+text = "Mod Name"
+label_settings = SubResource("LabelSettings_q15yq")
+text_overrun_behavior = 3
+
+[node name="desc" type="Label" parent="item/info"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+text = "Mod Description"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="enabled" type="CheckButton" parent="item"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+button_pressed = true
+text = "Enabled"
+flat = true
+alignment = 1

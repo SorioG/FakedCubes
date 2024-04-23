@@ -1,12 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://by5yq33rm4dh1"]
+[gd_scene load_steps=4 format=3 uid="uid://by5yq33rm4dh1"]
 
 [ext_resource type="Script" path="res://scenes/loading_screen.gd" id="1_4pdcq"]
-[ext_resource type="Texture2D" uid="uid://dflf0q4jn038c" path="res://assets/sprites/action_icons9.png" id="1_ubtmu"]
 [ext_resource type="Texture2D" uid="uid://ilmyuxi1v6m3" path="res://assets/sprites/logo.png" id="2_e5n2h"]
-[ext_resource type="AudioStream" uid="uid://c0kfooh6uqect" path="res://assets/music/fakedcubes_theme_new.ogg" id="4_b1jmt"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_tl1k3"]
-font_size = 24
+font_size = 32
 outline_size = 10
 outline_color = Color(0, 0, 0, 1)
 
@@ -29,8 +27,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("1_ubtmu")
-stretch_mode = 5
+stretch_mode = 6
 
 [node name="logo" type="TextureRect" parent="."]
 texture_filter = 1
@@ -41,6 +38,7 @@ texture = ExtResource("2_e5n2h")
 expand_mode = 3
 
 [node name="progress" type="ProgressBar" parent="."]
+visible = false
 custom_minimum_size = Vector2(0, 50)
 anchors_preset = 12
 anchor_top = 1.0
@@ -57,15 +55,11 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -73.0
-offset_bottom = -50.0
+offset_top = -136.0
+offset_bottom = -36.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Loading..."
 label_settings = SubResource("LabelSettings_tl1k3")
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="music" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_b1jmt")
-pitch_scale = 0.5

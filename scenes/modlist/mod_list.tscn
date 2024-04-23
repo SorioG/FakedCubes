@@ -1,0 +1,65 @@
+[gd_scene load_steps=3 format=3 uid="uid://cxfxw68ocj3lb"]
+
+[ext_resource type="Script" path="res://scenes/modlist/mod_list.gd" id="1_sok4x"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1b5pg"]
+font_size = 25
+
+[node name="ModList" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sok4x")
+
+[node name="box" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="scroll" type="ScrollContainer" parent="box"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="list" type="VBoxContainer" parent="box/scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="nomods" type="Label" parent="box/scroll/list"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+text = "You don't have any mods installed."
+label_settings = SubResource("LabelSettings_1b5pg")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="buttons" type="HBoxContainer" parent="box"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+alignment = 1
+
+[node name="disableall" type="Button" parent="box/buttons"]
+layout_mode = 2
+text = "Disable All"
+
+[node name="enableall" type="Button" parent="box/buttons"]
+layout_mode = 2
+text = "Enable All"
+
+[node name="modsdir" type="Button" parent="box/buttons"]
+layout_mode = 2
+text = "Open Mods Directory"
+
+[node name="documentation" type="Button" parent="box/buttons"]
+layout_mode = 2
+tooltip_text = "The documentation is not ready yet, it will be enabled when it's ready."
+disabled = true
+text = "Open Documentation"
+
+[node name="apiver" type="Label" parent="box/buttons"]
+visible = false
+layout_mode = 2
+text = "API Version: 0.0"

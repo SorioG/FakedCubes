@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dpswufreepa67"]
+[gd_scene load_steps=10 format=3 uid="uid://dpswufreepa67"]
 
 [ext_resource type="Texture2D" uid="uid://dcx05njwsiixq" path="res://assets/sprites/action_icons1.png" id="1_b5c1i"]
 [ext_resource type="Script" path="res://scenes/player/player_hud.gd" id="1_hdqkj"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dh6nl4ila1rh1" path="res://assets/sprites/player-default.png" id="3_gm50e"]
 [ext_resource type="Texture2D" uid="uid://t1sj0gqipki8" path="res://assets/sprites/action_icons2.png" id="5_g4llw"]
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="6_4telq"]
+[ext_resource type="Texture2D" uid="uid://dqbisq1u0ap4o" path="res://assets/sprites/hats/hat1.png" id="6_n3wd2"]
 [ext_resource type="AudioStream" uid="uid://c4hel8s01gyu0" path="res://assets/sounds/select2.ogg" id="7_uoudm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hb1vw"]
@@ -32,6 +33,7 @@ mouse_filter = 1
 script = ExtResource("1_hdqkj")
 
 [node name="actions" type="HBoxContainer" parent="."]
+modulate = Color(1, 1, 1, 0.486275)
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -42,44 +44,42 @@ grow_horizontal = 2
 grow_vertical = 0
 alignment = 2
 
-[node name="btn1" type="TextureButton" parent="actions"]
+[node name="btn4" type="TextureButton" parent="actions"]
 layout_mode = 2
-texture_normal = ExtResource("1_b5c1i")
-stretch_mode = 3
-
-[node name="btn2" type="TextureButton" parent="actions"]
-layout_mode = 2
-texture_normal = ExtResource("5_g4llw")
-stretch_mode = 3
+texture_normal = ExtResource("1_qokn0")
+stretch_mode = 5
 
 [node name="btn3" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("1_qokn0")
-stretch_mode = 3
+stretch_mode = 5
 
-[node name="btn4" type="TextureButton" parent="actions"]
+[node name="btn2" type="TextureButton" parent="actions"]
 layout_mode = 2
-texture_normal = ExtResource("1_qokn0")
-stretch_mode = 3
+texture_normal = ExtResource("5_g4llw")
+stretch_mode = 5
+
+[node name="btn1" type="TextureButton" parent="actions"]
+layout_mode = 2
+texture_normal = ExtResource("1_b5c1i")
+stretch_mode = 5
 
 [node name="gameinfo" type="PopupPanel" parent="."]
 title = "Game Info"
 initial_position = 2
-size = Vector2i(600, 380)
+size = Vector2i(800, 410)
 transparent = true
 theme_override_styles/panel = SubResource("StyleBoxFlat_hb1vw")
 
 [node name="tabs" type="TabContainer" parent="gameinfo"]
 offset_left = 3.0
 offset_top = 3.0
-offset_right = 597.0
-offset_bottom = 377.0
+offset_right = 797.0
+offset_bottom = 407.0
 focus_mode = 2
 tab_alignment = 1
-current_tab = 1
 
 [node name="Player" type="HBoxContainer" parent="gameinfo/tabs"]
-visible = false
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="gameinfo/tabs/Player"]
@@ -120,41 +120,58 @@ hframes = 9
 vframes = 3
 frame = 18
 
-[node name="skinlist" type="ScrollContainer" parent="gameinfo/tabs/Player"]
+[node name="Hat" type="Sprite2D" parent="gameinfo/tabs/Player/HBoxContainer/skinview/viewport"]
+position = Vector2(100, 150)
+texture = ExtResource("6_n3wd2")
+
+[node name="TabContainer" type="TabContainer" parent="gameinfo/tabs/Player"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="gameinfo/tabs/Player/skinlist"]
+[node name="Skin" type="ScrollContainer" parent="gameinfo/tabs/Player/TabContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="skinbuiltin" type="VBoxContainer" parent="gameinfo/tabs/Player/skinlist/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="gameinfo/tabs/Player/TabContainer/Skin"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="skinbuiltin" type="VBoxContainer" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer"]
 layout_mode = 2
 
-[node name="skins" type="GridContainer" parent="gameinfo/tabs/Player/skinlist/VBoxContainer/skinbuiltin"]
+[node name="skins" type="GridContainer" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skinbuiltin"]
 layout_mode = 2
 focus_next = NodePath("../../skincustom/skins")
-columns = 3
+columns = 5
 
-[node name="skincustom" type="VBoxContainer" parent="gameinfo/tabs/Player/skinlist/VBoxContainer"]
+[node name="skincustom" type="VBoxContainer" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom"]
+[node name="Label" type="Label" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom"]
 layout_mode = 2
 text = "Custom:"
 horizontal_alignment = 1
 
-[node name="skins" type="GridContainer" parent="gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom"]
+[node name="skins" type="GridContainer" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom"]
 layout_mode = 2
 focus_previous = NodePath("../../skinbuiltin/skins")
 columns = 3
 
-[node name="openskins" type="Button" parent="gameinfo/tabs/Player/skinlist/VBoxContainer/skincustom"]
+[node name="openskins" type="Button" parent="gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom"]
 layout_mode = 2
 text = "Open Skins Directory"
 flat = true
 
+[node name="Hats" type="ScrollContainer" parent="gameinfo/tabs/Player/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="hatlist" type="GridContainer" parent="gameinfo/tabs/Player/TabContainer/Hats"]
+layout_mode = 2
+columns = 3
+
 [node name="Game" type="ScrollContainer" parent="gameinfo/tabs"]
+visible = false
 layout_mode = 2
 
 [node name="btns" type="VBoxContainer" parent="gameinfo/tabs/Game"]

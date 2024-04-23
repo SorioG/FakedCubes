@@ -1,25 +1,40 @@
-[gd_scene load_steps=10 format=3 uid="uid://d146f4nvtxkbc"]
+[gd_scene load_steps=15 format=3 uid="uid://d146f4nvtxkbc"]
 
 [ext_resource type="Script" path="res://scenes/game.gd" id="1_cppsc"]
 [ext_resource type="PackedScene" uid="uid://dmr0fcamx7t56" path="res://joystick/virtual_joystick.tscn" id="2_mvfe1"]
 [ext_resource type="PackedScene" uid="uid://drioxemoktbtr" path="res://scenes/player/player.tscn" id="2_vmoa8"]
+[ext_resource type="Texture2D" uid="uid://cyxdaal0kdje5" path="res://assets/sprites/joystick_base.png" id="3_q77ue"]
 [ext_resource type="Texture2D" uid="uid://s20dp4av2sc7" path="res://assets/sprites/chaticons2.png" id="4_kqxca"]
+[ext_resource type="Texture2D" uid="uid://c1jmrscfidaix" path="res://assets/sprites/joystick_tip.png" id="4_wtewd"]
 [ext_resource type="Texture2D" uid="uid://bqsu8enivi4b1" path="res://assets/sprites/chaticons3.png" id="5_pkppa"]
 [ext_resource type="Texture2D" uid="uid://cqjpw44ltvbww" path="res://assets/sprites/chaticons4.png" id="6_3knuy"]
 [ext_resource type="PackedScene" uid="uid://bl2s5ktdlsqvu" path="res://scenes/chat_window.tscn" id="7_umeys"]
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="8_lo2ue"]
+[ext_resource type="AudioStream" uid="uid://cfh5136glfe3t" path="res://assets/sounds/space shield sounds - 5.wav" id="10_mwt1k"]
+[ext_resource type="AudioStream" uid="uid://bweypitflmlms" path="res://assets/sounds/space shield sounds - 9.wav" id="11_vhal8"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2hoyb"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_4gotb"]
 properties/0/path = NodePath(".:num_bots")
 properties/0/spawn = true
 properties/0/replication_mode = 1
+properties/1/path = NodePath(".:is_voice_chat_allowed")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:is_custom_skins_allowed")
+properties/2/spawn = true
+properties/2/replication_mode = 1
 
 [node name="game" type="Node2D"]
+process_mode = 3
 script = ExtResource("1_cppsc")
 
 [node name="map" type="Node2D" parent="."]
+process_mode = 1
 
 [node name="players" type="Node2D" parent="."]
+process_mode = 1
 
 [node name="hud" type="CanvasLayer" parent="."]
 layer = 0
@@ -66,11 +81,19 @@ offset_top = -334.0
 offset_right = 312.0
 offset_bottom = -34.0
 mouse_filter = 1
+joystick_mode = 1
 visibility_mode = 1
 action_left = "move_left"
 action_right = "move_right"
 action_up = "move_up"
 action_down = "move_down"
+
+[node name="Base" parent="hud/Virtual Joystick" index="0"]
+modulate = Color(1, 1, 1, 0.454902)
+texture = ExtResource("3_q77ue")
+
+[node name="Tip" parent="hud/Virtual Joystick/Base" index="0"]
+texture = ExtResource("4_wtewd")
 
 [node name="role_reveal" type="Control" parent="hud"]
 visible = false
@@ -170,25 +193,55 @@ offset_bottom = 496.0
 grow_horizontal = 0
 grow_vertical = 1
 
-[node name="PauseWindow" type="PanelContainer" parent="hud"]
-visible = false
-custom_minimum_size = Vector2(400, 500)
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -269.0
-offset_right = 200.0
-offset_bottom = 231.0
+[node name="PauseBG" type="ColorRect" parent="hud"]
+process_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.0117647, 0.0117647, 0.0117647, 0.819608)
+
+[node name="PauseWindow" type="PanelContainer" parent="hud"]
+process_mode = 3
+custom_minimum_size = Vector2(400, 500)
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -31.0
+offset_right = 31.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_2hoyb")
 
 [node name="btns" type="VBoxContainer" parent="hud/PauseWindow"]
 layout_mode = 2
+alignment = 1
+
+[node name="resume" type="Button" parent="hud/PauseWindow/btns"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "Resume"
+
+[node name="quit" type="Button" parent="hud/PauseWindow/btns"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "Quit"
+
+[node name="paused" type="AudioStreamPlayer" parent="hud/PauseWindow"]
+stream = ExtResource("10_mwt1k")
+volume_db = 4.0
+pitch_scale = 2.0
+
+[node name="resumed" type="AudioStreamPlayer" parent="hud/PauseWindow"]
+stream = ExtResource("11_vhal8")
+volume_db = 4.0
+pitch_scale = 4.0
 
 [node name="bot_spawn_timer" type="Timer" parent="."]
+process_mode = 1
 wait_time = 0.2
 
 [node name="bg" type="CanvasLayer" parent="."]
@@ -220,4 +273,7 @@ wait_time = 3.0
 replication_config = SubResource("SceneReplicationConfig_4gotb")
 
 [node name="dediserver_timer" type="Timer" parent="."]
+process_mode = 1
 wait_time = 20.0
+
+[editable path="hud/Virtual Joystick"]

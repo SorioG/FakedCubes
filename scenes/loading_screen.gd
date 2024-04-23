@@ -3,7 +3,6 @@ extends CanvasLayer
 @onready var progress: ProgressBar = $progress
 @onready var randimg: TextureRect = $randimg
 @onready var loadlabel: Label = $loadlabel
-@onready var music: AudioStreamPlayer = $music
 
 func _ready():
 	visible = false
@@ -18,4 +17,3 @@ func set_progress(val: float):
 
 func hide_screen():
 	visible = false
-	music.stop()

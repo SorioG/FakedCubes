@@ -1,9 +1,6 @@
 extends Node
 
-var version_state = "Alpha"
-var version = version_state + " " + ProjectSettings.get_setting("application/config/version")
-
-
+var version = ProjectSettings.get_setting("application/config/version")
 
 enum FACE_TYPE {
 	BODY,
@@ -69,7 +66,8 @@ var stop_animations: Array[String] = [
 
 var idle_animations: Array[String] = [
 	"idle",
-	"idle2"
+	"idle2",
+	"idle3"
 ]
 
 var game_modes: Array[Dictionary] = [
@@ -90,44 +88,7 @@ var game_modes: Array[Dictionary] = [
 	}
 ]
 
-var player_skins: Dictionary = {
-	"Default": {
-		"skin": load("res://assets/sprites/player-default.png"),
-		"icon": load("res://assets/sprites/skinicons/default.png")
-	},
-	"Robot": {
-		"skin": BOT_SKIN,
-		"icon": load("res://assets/sprites/skinicons/bot.png")
-	},
-	"Killer": {
-		"skin": load("res://assets/sprites/player-killer.png"),
-		"icon": load("res://assets/sprites/skinicons/killer.png")
-	},
-	"Squashed": {
-		"skin": load("res://assets/sprites/player-squashed.png"),
-		"icon": load("res://assets/sprites/skinicons/squashed.png")
-	},
-	"Reddy": {
-		"skin": load("res://assets/sprites/player-blockscape.png"),
-		"icon": load("res://assets/sprites/skinicons/blockscape.png")
-	},
-	"Cubette": {
-		"skin": load("res://assets/sprites/player-female.png"),
-		"icon": load("res://assets/sprites/skinicons/female.png")
-	},
-	"Deal With It": {
-		"skin": load("res://assets/sprites/player-glasses.png"),
-		"icon": load("res://assets/sprites/skinicons/glasses.png")
-	},
-	"Square Glasses": {
-		"skin": load("res://assets/sprites/player-glasses2.png"),
-		"icon": load("res://assets/sprites/skinicons/glasses2.png")
-	},
-	"Mini": {
-		"skin": load("res://assets/sprites/player-mini.png"),
-		"icon": load("res://assets/sprites/skinicons/mini.png")
-	}
-}
+var player_skins: Dictionary = GameData.player_skins
 
 var custom_skins: Dictionary = {}
 var custom_maps: Dictionary = {}
@@ -149,16 +110,40 @@ enum PLATFORM_TYPE {
 
 var client_info: Dictionary = {
 	"username": "Player",
-	"version": version
+	"version": version,
+	"skin": "Default",
+	"hat": "None"
 }
 
-var is_lua_enabled = false # This is used to check if we can use Lua API for our mods (in case if mobile does not work with mods)
+var is_lua_enabled = false # This is used to check if we can use Lua API for our mods
 
 var hide_menu = false
 
 var server_config: ConfigFile
 
+var user_config: ConfigFile = ConfigFile.new()
+
 var maps_path: String = "user://maps"
+var mods_path: String = "user://mods"
+
+var can_save_config = false
+
+# Disabled Mods in Mod Menu will show up here
+var disabled_mods := []
+
+# Used to check whatever or not we have mods enabled
+var has_mods_enabled := false
+
+# epic fail
+const DISCORD_LINK = "https://discord.gg/BFgQM5Wn2n"
+
+func lua_fields():
+	return [
+		"load_user_config",
+		"load_custom_skins",
+		"load_custom_maps",
+		"load_server_config"
+	]
 
 func _ready():
 	is_emulating_mobile = ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false) 
@@ -167,22 +152,48 @@ func _ready():
 	
 	if is_dedicated_server:
 		maps_path = OS.get_executable_path().get_base_dir().path_join("maps")
+		mods_path = OS.get_executable_path().get_base_dir().path_join("mods")
 	
 	#if ClassDB.class_exists("LuaAPI") and ClassDB.is_class_enabled("LuaAPI"):
 	if not OS.has_feature("DisableLua"):
-		print("Lua API enabled.")
+		#print("Lua API enabled.")
 		is_lua_enabled = true
 	
 	DirAccess.make_dir_absolute(maps_path)
 	DirAccess.make_dir_absolute("user://skins")
+	DirAccess.make_dir_absolute(mods_path)
 	
-	load_custom_maps()
 	
-	if not OS.has_feature("dedicated_server"):
-		load_custom_skins()
 
-func load_custom_skins():
-	var dir = DirAccess.open("user://skins")
+func load_user_config():
+	var config = user_config
+	
+	var err = config.load("user://client.cfg")
+	
+	if err != OK:
+		return
+	
+	client_info["username"] = config.get_value("Player", "username", "Player")
+	client_info["skin"] = config.get_value("Player", "skin", "Default")
+	client_info["hat"] = config.get_value("Player", "hat", "None")
+	
+	disabled_mods = config.get_value("Mods", "disabled_mods", [])
+
+func save_user_config():
+	user_config.set_value("Player", "username", client_info["username"])
+	user_config.set_value("Player", "skin", client_info["skin"])
+	user_config.set_value("Player", "hat", client_info["hat"])
+	
+	user_config.set_value("Mods", "disabled_mods", disabled_mods)
+	
+	user_config.save("user://client.cfg")
+
+func _exit_tree():
+	if not OS.has_feature("dedicated_server") and can_save_config:
+		save_user_config()
+
+func load_custom_skins(path: String):
+	var dir = DirAccess.open(path)
 	
 	if dir:
 		dir.list_dir_begin()
@@ -212,11 +223,11 @@ func load_custom_skins():
 						print("Loaded custom skin: " + skinname)
 			
 			filename = dir.get_next()
-	else:
-		print("Failed to load custom skins")
+	#else:
+	#	print("Failed to load custom skins")
 
-func load_custom_maps():
-	var dir = DirAccess.open(maps_path)
+func load_custom_maps(path: String):
+	var dir = DirAccess.open(path)
 	
 	if dir:
 		dir.list_dir_begin()
@@ -230,8 +241,8 @@ func load_custom_maps():
 				print("Loaded custom map: " + mapname)
 			
 			filename = dir.get_next()
-	else:
-		print("Failed to load custom maps")
+	#else:
+	#	print("Failed to load custom maps")
 
 func change_scene(scene: PackedScene):
 	var err = get_tree().change_scene_to_packed(scene)
@@ -275,7 +286,9 @@ func alert(msg: String):
 func load_server_config():
 	var config := ConfigFile.new()
 	
-	var err = config.load(OS.get_executable_path().get_base_dir().path_join("server.cfg"))
+	var path = OS.get_executable_path().get_base_dir().path_join("server.cfg")
+	
+	var err = config.load(path)
 	
 	if err != OK:
 		config.set_value("Game", "gamemode", 0)
@@ -284,10 +297,17 @@ func load_server_config():
 		config.set_value("Game", "use_custom_maps", [])
 		
 		config.set_value("Server", "port", Global.server_port)
+		config.set_value("Server", "name", "Dedicated Server")
 		config.set_value("Server", "allow_early_join", false)
 		config.set_value("Server", "allow_custom_skins", true)
+		config.set_value("Server", "allow_modded_clients", true)
 		config.set_value("Server", "voice_chat", true)
 		
-		config.save(OS.get_executable_path().get_base_dir().path_join("server.cfg"))
+		config.save(path)
 	
 	server_config = config
+	
+	server_port = config.get_value("Server", "port", server_port)
+
+func _process(_delta):
+	client_info["version"] = version

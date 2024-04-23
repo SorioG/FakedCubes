@@ -8,6 +8,9 @@ class_name Game
 
 @onready var chat_window = $hud/ChatWindow
 
+@onready var pause_bg = $hud/PauseBG
+@onready var pause_win = $hud/PauseWindow
+
 var lan_announcer: PacketPeerUDP
 
 var current_map: Node2D
@@ -72,6 +75,7 @@ var server_info: Dictionary = {
 
 var dediserver_confirmed = false
 
+# Custom Maps
 var is_using_custom_map = false
 var custom_map_path: String = ""
 
@@ -80,6 +84,9 @@ var current_map_path: String = ""
 var custom_lobby_path: String = ""
 
 @export var can_change_map = true
+
+@export var is_voice_chat_allowed = true
+@export var is_custom_skins_allowed = true
 
 signal local_player_used_action(action: int)
 signal game_ended
@@ -133,17 +140,20 @@ func _ready():
 	$hud/vc_enable.connect("pressed", _enable_microphone)
 	$hud/chat.connect("pressed", _show_chat_window)
 	
+	$hud/vc_enable.visible = is_voice_chat_allowed
+	
 	if net_mode == Global.GAME_TYPE.SINGLEPLAYER:
 		change_to_lobby()
 		
 		if spawn_local_player:
-			local_player = spawn_player(true, "Player1")
+			local_player = spawn_player(true, "Player")
 		
 		$bot_spawn_timer.connect("timeout", bot_spawn)
 		$bot_spawn_timer.start()
 		
+		# Voice Chat is not needed in singleplayer
 		$hud/vc_enable.visible = false
-		
+		is_voice_chat_allowed = false
 	
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
 		var peer = ENetMultiplayerPeer.new()
@@ -169,6 +179,7 @@ func _ready():
 		# Announce the server to LAN
 		lan_announcer = PacketPeerUDP.new()
 		lan_announcer.set_broadcast_enabled(true)
+		# Should we keep the destination address with that one?
 		lan_announcer.set_dest_address("255.255.255.255", 9887)
 		
 		$announce_timer.connect("timeout", _lan_announce)
@@ -201,11 +212,58 @@ func _ready():
 		parse_server_config()
 		
 		$dediserver_timer.start()
+	
+	pause_bg.visible = false
+	pause_win.visible = false
+	
+	$hud/menu.connect("pressed", _pause_pressed)
+	$hud/PauseWindow/btns/resume.connect("pressed", _resume_pressed)
+	$hud/PauseWindow/btns/quit.connect("pressed", _leave_game)
+
+func _pause_pressed():
+	pause_bg.visible = true
+	pause_bg.modulate = Color.TRANSPARENT
+	pause_win.visible = true
+	#pause_win.position = Vector2(376, 80)
+	
+	pause_win.get_node("paused").play()
+	
+	var tween = create_tween()
+	#tween.tween_property(pause_win, "position", Vector2(376, 55), 0.2)
+	tween.tween_property(pause_bg, "modulate", Color.WHITE, 0.2)
+	
+	pause_win.get_node("btns/resume").grab_focus()
+	
+	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
+		get_tree().paused = true
+
+func _resume_pressed():
+	pause_bg.visible = false
+	pause_win.visible = false
+	#pause_bg.color = Color.from_string("#00000093", Color.BLACK)
+	
+	
+	pause_win.get_node("resumed").play()
+	
+	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
+		get_tree().paused = false
+
+func _leave_game():
+	get_tree().set_deferred("paused", false)
+	
+	Global.net_mode = Global.GAME_TYPE.SINGLEPLAYER
+	
+	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	Global.change_scene_file("res://scenes/menu_screen.tscn")
 
 func parse_server_config():
 	var config: ConfigFile = Global.server_config
 	
 	if not config: return
+	
+	server_info["name"] = config.get_value("Server", "name", "Dedicated Server")
+	is_custom_skins_allowed = config.get_value("Server", "allow_custom_skins", true)
+	is_voice_chat_allowed = config.get_value("Server", "voice_chat", true)
 	
 	var lobby_map = config.get_value("Game", "lobby_map", "default")
 	
@@ -251,18 +309,18 @@ func net_user_message(msg: String):
 	if player:
 		chat_window.add_message(player.player_name, msg)
 		
-		print("[CHAT] " + player.player_name + ": " + msg)
+		print("[Chat] " + player.player_name + ": " + msg)
 	else:
 		push_warning("Someone typed a message, but player does not exist")
 
 @rpc("authority", "call_local", "reliable")
 func net_server_message(msg: String):
 	chat_window.add_message("Server", msg, load("res://assets/sprites/computer.png"))
-	print("[CHAT] Server: " + msg)
+	print("[Chat] Server: " + msg)
 
 func _on_peer_joined(id: int):
 	if multiplayer.is_server():
-		if is_using_custom_map and not current_map_path.is_empty():
+		if not current_map_path.is_empty():
 			var file = FileAccess.open(current_map_path, FileAccess.READ)
 			
 			var netdata = Marshalls.raw_to_base64(file.get_buffer(file.get_length()))
@@ -275,6 +333,8 @@ func _on_peer_joined(id: int):
 		
 		net_change_gamemode.rpc_id(id, gamemode_idx)
 		multi_spawner.spawn(id)
+		
+		# TODO: Automatically download required mods used from the server before spawning
 	
 	# Send the correct skin to a player (whatever or not it's a custom skin)
 	if local_player:
@@ -282,6 +342,8 @@ func _on_peer_joined(id: int):
 			local_player.net_load_custom_skin.rpc_id(id, local_player.custom_skin_data)
 		else:
 			local_player.net_set_skin.rpc_id(id, local_player.skin_name)
+		
+		local_player.net_set_hat.rpc_id(id, local_player.hat_name)
 	
 
 
@@ -350,6 +412,9 @@ func _process(_delta):
 	
 	if local_player:
 		update_players()
+		
+		if Input.is_action_just_pressed("menu") and not pause_win.visible:
+			_pause_pressed()
 	
 	if game_state == STATE.INGAME:
 		gamemode_node.game_tick()
@@ -366,6 +431,8 @@ func _process(_delta):
 		if bot_players.size() >= num_bots and game_state == STATE.LOBBY:
 			_on_start_pressed()
 			autoplay = false
+	
+	$hud/vc_enable.visible = is_voice_chat_allowed
 
 @rpc("authority", "call_local", "reliable")
 func change_map(m: String):
@@ -489,6 +556,7 @@ func get_players(exclude_bots: bool = false) -> Array[Player]:
 	for plr in players_node.get_children():
 		if plr is Player:
 			if plr.is_bot and exclude_bots: continue
+			if plr.c_game != self: continue
 			res.append(plr)
 	
 	return res
@@ -707,12 +775,12 @@ func handle_arguments():
 
 
 func load_custom_map(path: String):
-	if is_instance_valid(current_map):
-		current_map.free()
-	
 	var map = ResourceLoader.load(path, "PackedScene")
 	
 	if map is PackedScene:
+		if is_instance_valid(current_map):
+			current_map.free()
+		
 		var cmap = map.instantiate()
 		
 		current_map = cmap
@@ -731,6 +799,8 @@ func load_custom_map(path: String):
 			net_download_map.rpc(netdata)
 			
 			file.close()
+	else:
+		print("Failed to load custom map")
 
 @rpc("call_remote", "reliable")
 func net_download_map(file: String):
@@ -747,3 +817,30 @@ func net_download_map(file: String):
 	map.close()
 	
 	load_custom_map.call_deferred(path)
+
+@rpc("any_peer", "reliable", "call_local")
+func net_client_info(info: Dictionary):
+	pass
+
+# Something that's useful for mods
+func get_gamemode_name() -> String:
+	return current_gamemode["name"]
+
+func load_custom_map_by_name(n: String):
+	if Global.custom_maps.has(n):
+		load_custom_map(Global.custom_maps[n])
+	else:
+		print("Custom map named '" + n + "' does not exist")
+
+func send_server_message(msg: String):
+	net_server_message.rpc(msg)
+
+func send_server_message_to_id(id: int, msg: String):
+	net_server_message.rpc_id(id, msg)
+
+func send_player_message(msg: String):
+	if Global.is_dedicated_server:
+		print("[WARN] The host is not a player, please use send_server_message instead")
+		net_server_message.rpc(msg)
+	else:
+		net_user_message.rpc(msg)

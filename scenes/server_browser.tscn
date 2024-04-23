@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dfbk18kcp12t1"]
+[gd_scene load_steps=4 format=3 uid="uid://dfbk18kcp12t1"]
 
 [ext_resource type="Script" path="res://scenes/server_browser.gd" id="1_70faq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n3683"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_kriha"]
 font_size = 12
@@ -26,6 +28,7 @@ tab_alignment = 1
 
 [node name="LAN" type="ItemList" parent="tabs"]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_n3683")
 item_count = 1
 item_0/text = "Searching for servers..."
 item_0/selectable = false
