@@ -1,8 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://k1i5wlt0ju76"]
+[gd_scene load_steps=17 format=3 uid="uid://k1i5wlt0ju76"]
 
 [ext_resource type="Script" path="res://scenes/menu_screen.gd" id="1_38ftq"]
 [ext_resource type="PackedScene" uid="uid://drioxemoktbtr" path="res://scenes/player/player.tscn" id="3_1v1pj"]
 [ext_resource type="Texture2D" uid="uid://ilmyuxi1v6m3" path="res://assets/sprites/logo.png" id="3_egxal"]
+[ext_resource type="Texture2D" uid="uid://t1sj0gqipki8" path="res://assets/sprites/action_icons2.png" id="3_f27v6"]
 [ext_resource type="Texture2D" uid="uid://dat1rvmtmbl26" path="res://assets/sprites/action_icons8.png" id="4_n7unn"]
 [ext_resource type="Texture2D" uid="uid://bnkt07r1fjiyj" path="res://assets/sprites/action_icons4.png" id="5_g77bi"]
 [ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="5_t0mf4"]
@@ -72,37 +73,42 @@ alignment = 1
 
 [node name="singleplayer" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
-text = "Local Game"
+text = "Singleplayer"
+icon = ExtResource("4_n7unn")
 flat = true
 
 [node name="hostgame" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Host Game"
+icon = ExtResource("3_f27v6")
 flat = true
 
 [node name="joingame" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 focus_neighbor_right = NodePath("../../../ServerBrowser")
 text = "Join Game"
+icon = ExtResource("6_o5dxp")
 flat = true
 
 [node name="mods" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Mods"
+icon = ExtResource("6_rtgfl")
 flat = true
 
 [node name="quitbtn" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Quit to Desktop"
+icon = ExtResource("5_t0mf4")
 flat = true
 
 [node name="Logo" type="TextureRect" parent="UI/menu"]
 texture_filter = 1
 layout_mode = 0
 offset_left = 69.0
-offset_top = -232.0
+offset_top = -297.0
 offset_right = 350.0
-offset_bottom = -82.0
+offset_bottom = -147.0
 texture = ExtResource("3_egxal")
 
 [node name="mobilebtns" type="HBoxContainer" parent="UI/menu"]

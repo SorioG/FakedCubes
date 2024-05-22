@@ -110,10 +110,10 @@ func _ready():
 	var sk = Global.player_skins[Global.client_info["skin"]]["skin"]
 	var hattex = GameData.player_hats[Global.client_info["hat"]]
 	$screen1/Control/menu_player.set_skin(sk)
-	$screen1/Control/other_player.set_skin(sk)
+	#$screen1/Control/other_player.set_skin(sk)
 	
 	$screen1/Control/menu_player.set_hat(hattex)
-	$screen1/Control/other_player.set_hat(hattex)
+	#$screen1/Control/other_player.set_hat(hattex)
 	
 	$screen1/Control/menu_player.player_name = Global.client_info["username"]
 	
@@ -200,13 +200,15 @@ func _game_ended():
 	#game.num_bots += randi_range(1, 4)
 
 func _singleplayer_pressed():
-	print("playing singleplayer")
+	print("[Game] Playing Singleplayer")
 	
 	Global.net_mode = Global.GAME_TYPE.SINGLEPLAYER
 	
 	Global.change_scene_file("res://scenes/game.tscn")
 
 func _host_pressed():
+	print("[Game] Hosting the server")
+	
 	Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_HOST
 	
 	Global.change_scene_file("res://scenes/game.tscn")

@@ -146,7 +146,7 @@ func _ready():
 		change_to_lobby()
 		
 		if spawn_local_player:
-			local_player = spawn_player(true, "Player")
+			local_player = spawn_player(true, "Player1")
 		
 		$bot_spawn_timer.connect("timeout", bot_spawn)
 		$bot_spawn_timer.start()
@@ -157,7 +157,18 @@ func _ready():
 	
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
 		var peer = ENetMultiplayerPeer.new()
-		peer.create_server(Global.server_port)
+		var err = peer.create_server(Global.server_port)
+		
+		if err != OK:
+			Global.alert("Failed to start the server, is the port open?", "Server Error")
+			
+			if Global.is_dedicated_server:
+				# Automatically stop the dedicated server in case of the error
+				get_tree().quit(1)
+			
+			_leave_game()
+			return
+		
 		multiplayer.multiplayer_peer = peer
 		
 		change_to_lobby()
@@ -168,10 +179,7 @@ func _ready():
 		if not Global.is_dedicated_server:
 			multi_spawner.spawn(1)
 			
-			if Global.is_mobile:
-				server_info["name"] = OS.get_model_name()
-			else:
-				server_info["name"] = OS.get_distribution_name()
+			server_info["name"] = Global.client_info["username"] + "'s server"
 		
 		$bot_spawn_timer.connect("timeout", bot_spawn)
 		$bot_spawn_timer.start()
@@ -190,9 +198,11 @@ func _ready():
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		$hud/lobby_ui/StartButton.visible = false
 		
+		print("Connecting to " + Global.server_ip + ":" + str(Global.server_port))
+		
 		#LoadingScreen.music.play()
 		LoadingScreen.show_screen()
-		LoadingScreen.loadlabel.text = "Connecting to the server..."
+		LoadingScreen.loadlabel.text = tr("Connecting to the server...")
 		
 		var peer = ENetMultiplayerPeer.new()
 		peer.create_client(Global.server_ip, Global.server_port)
@@ -278,6 +288,7 @@ func change_to_lobby():
 	else:
 		load_custom_map(custom_lobby_path)
 
+## Automatically start the game on a dedicated server
 func dediserver_autostart():
 	if game_state == STATE.INGAME: return
 	if can_start_game() == "OK":
@@ -319,6 +330,7 @@ func net_server_message(msg: String):
 	print("[Chat] Server: " + msg)
 
 func _on_peer_joined(id: int):
+	print("[Server] Player " + str(id) + " has connected")
 	if multiplayer.is_server():
 		if not current_map_path.is_empty():
 			var file = FileAccess.open(current_map_path, FileAccess.READ)
@@ -332,7 +344,6 @@ func _on_peer_joined(id: int):
 			change_map.rpc_id(id, current_map.name)
 		
 		net_change_gamemode.rpc_id(id, gamemode_idx)
-		multi_spawner.spawn(id)
 		
 		# TODO: Automatically download required mods used from the server before spawning
 	
@@ -352,7 +363,15 @@ func _on_peer_left(id: int):
 	var player = players_node.get_node_or_null("Player" + str(id))
 	
 	if player:
+		print("[Game] " + player.player_name + " left the game")
 		player.disappear()
+
+		if Global.is_dedicated_server and ("--close-on-empty" in OS.get_cmdline_args()):
+			if multiplayer.get_peers().size() < 1:
+				print("Closing automatically due to the server being empty")
+				get_tree().quit.call_deferred()
+	else:
+		print("[Server] Player " + str(id) + " disconnected")
 
 func bot_spawn():
 	var size = bot_players.size()
@@ -404,7 +423,7 @@ func _process(_delta):
 	bottominfo.text += " | "
 	
 	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
-		bottominfo.text += "Local Game"
+		bottominfo.text += "Singleplayer"
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
 		bottominfo.text += get_local_ip() + ":" + str(Global.server_port)
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
@@ -742,8 +761,9 @@ func _on_connection_failed():
 	Global.change_scene_file("res://scenes/menu_screen.tscn")
 
 func _on_connected():
-	LoadingScreen.loadlabel.text = "Spawning..."
-	LoadingScreen.set_progress(50)
+	LoadingScreen.loadlabel.text = "Sending client information..."
+	
+	net_client_info.rpc_id(1, Global.client_info)
 
 @rpc("call_remote", "reliable")
 func net_end_game(winner: int):
@@ -820,7 +840,68 @@ func net_download_map(file: String):
 
 @rpc("any_peer", "reliable", "call_local")
 func net_client_info(info: Dictionary):
-	pass
+	assert(multiplayer.is_server(), "Server Only RPC Function")
+	
+	var id = multiplayer.get_remote_sender_id()
+	
+	var can_join: bool = true
+	var err_msg: String = "You are not allowed to join this server"
+	
+	var modded: bool = info["modded"]
+	var mods: Array = info["mods"]
+	var username: String = info["username"]
+	var version: String = info["version"]
+	var platform: String = info["platform"]
+	
+	# Remind that client to use the version that the server is currently using
+	if version != Global.version:
+		err_msg = "Outdated Version! This server is using " + Global.version
+		can_join = false
+	
+	# Empty Usernames are kind of cheating.
+	if username.is_empty() and can_join:
+		err_msg = "The username must not be empty"
+		can_join = false
+	
+	# If this server is modded, we can check whatever or not this client has some mods enabled.
+	if ModLoader.required_mods.size() > 0 and can_join:
+		var max_mods = ModLoader.required_mods.size()
+		
+		if not modded:
+			err_msg = "You're connecting to a modded server, but you don't have any mods enabled. (" + str(max_mods) + " required mods used)"
+			can_join = false
+		else:
+			var mod_count = 0
+			for mod_id in mods:
+				if ModLoader.required_mods.has(mod_id):
+					mod_count += 1
+			
+			# This client does not have the server's required mods.
+			if mod_count != max_mods:
+				err_msg = "You do not have the " + str(max_mods-mod_count) + " required mods for this server."
+				can_join = false
+	
+	# Let the mods handle it as well.
+	ModLoader.call_hook("handle_client_info", [info, err_msg, can_join])
+	
+	if can_join:
+		print(username + " has joined the game (platform: " + platform + ", modded: " + str(modded) + ")")
+		multi_spawner.spawn(id)
+	else:
+		if username:
+			print(username + " failed to join the game (" + err_msg + ")")
+		else:
+			print("Player " + id + " failed to join the game (" + err_msg + ")")
+		
+		net_info_fail.rpc_id(id, err_msg)
+
+@rpc("any_peer", "reliable", "call_local")
+func net_info_fail(msg: String):
+	assert(multiplayer.get_remote_sender_id() == 1)
+	
+	Global.alert(msg, "Connection Failed")
+	
+	_leave_game()
 
 # Something that's useful for mods
 func get_gamemode_name() -> String:

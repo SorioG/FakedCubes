@@ -138,10 +138,11 @@ func init_mods():
 		
 		# Don't do anything below if this mod is disabled
 		if not Global.disabled_mods.has(info["id"]):
-			if not Global.has_mods_enabled:
-				DisplayServer.window_set_title("Faked Cubes (Modded)")
+			#if not Global.has_mods_enabled:
+			#	DisplayServer.window_set_title("Faked Cubes (Modded)")
 			
 			Global.has_mods_enabled = true
+			Global.client_info["modded"] = true
 			
 			# Only change the version if the mods used here require other players to have it.
 			if info["required"]:
@@ -149,6 +150,8 @@ func init_mods():
 					Global.version += "-modded"
 				
 				required_mods.push_back(info["id"])
+				
+				Global.client_info["mods"].push_back(info["id"])
 			
 			# Mods can have assets, so lua scripts can use them.
 			if DirAccess.dir_exists_absolute(mods_dir[dir].path_join("assets")):
@@ -190,7 +193,7 @@ func add_music(path: String):
 				var musi = ResourceLoader.load(path.path_join(file))
 				
 				if musi is AudioStream:
-					print("[ML] Added music '" + nam + "'")
+					print("[ModLoader] Added music '" + nam + "'")
 					MusicManager.replace_music(nam, musi)
 				
 			file = dir.get_next()

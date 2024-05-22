@@ -1,6 +1,7 @@
 extends Node2D
 
 func _ready():
+	print("--- Loading everything you need, please wait ---")
 	LoadingScreen.show_screen()
 	
 	LoadingScreen.loadlabel.text = tr("Loading Custom Maps")
@@ -9,15 +10,16 @@ func _ready():
 	
 	await get_tree().process_frame
 	
-	if not OS.has_feature("dedicated_server"):
+	# Dedicated Servers cannot have their own user data, as well as custom skins.
+	if not Global.is_dedicated_server:
 		LoadingScreen.loadlabel.text = tr("Loading Custom Skins")
 		print(tr("Loading Custom Skins"))
 		Global.load_custom_skins("user://skins")
 		
 		await get_tree().process_frame
 		
-		LoadingScreen.loadlabel.text = tr("Loading Data")
-		print(tr("Loading Data"))
+		LoadingScreen.loadlabel.text = tr("Loading User Data")
+		print(tr("Loading User Data"))
 		Global.load_user_config()
 		
 		Global.can_save_config = true
@@ -33,22 +35,30 @@ func _ready():
 	
 		await get_tree().process_frame
 	
+	print("--- Done Loading ---")
 	LoadingScreen.hide_screen()
 	
-	if OS.has_feature("dedicated_server") or ("--dediserver" in OS.get_cmdline_args() and OS.is_debug_build()):
+	if not Global.is_dedicated_server:
+		print("Faked Cubes - version: " + Global.version)
+	
+	if Global.is_dedicated_server:
 		# If launched through dedicated server, it will automatically host a server.
 		# This will be also used if "--dediserver" was included as a argument (only works on debug build)
+		
+		# Of Course, we need to load server configuration.
+		Global.load_server_config()
+		
 		print(" ")
 		print("---- Faked Cubes Dedicated Server ----")
 		print("Server Version: " + Global.version)
 		print("Hosting on port " + str(Global.server_port))
 		print("--------------------------------------")
 		print(" ")
-		Global.is_dedicated_server = true
+		# We don't need this line anymore as it was automatically set in "Global.gd" script.
+		#Global.is_dedicated_server = true
 		Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_HOST
 		
-		Global.load_server_config()
-		
+		# Everything above is done, just need to start the game.
 		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
 		
 	elif "--server" in OS.get_cmdline_args():
@@ -67,7 +77,6 @@ func _ready():
 		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
 	
 	else:
-		print("Faked Cubes - " + Global.version)
 		if not handle_arguments():
 			Global.change_scene_file.call_deferred("res://scenes/menu_screen.tscn")
 

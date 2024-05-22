@@ -45,9 +45,12 @@ var net_mode: GAME_TYPE = GAME_TYPE.SINGLEPLAYER
 var server_ip = "127.0.0.1"
 var server_port = 7230
 
+## Used to check whatever or not it's a dedicated server.
 var is_dedicated_server = false
 
+## Used to check if we are on a mobile device (Android or iOS)
 var is_mobile = false
+## This is used to trick the game into thinking this is a mobile device. (Useful for development)
 var is_emulating_mobile = false
 
 var device_id = OS.get_unique_id()
@@ -108,14 +111,20 @@ enum PLATFORM_TYPE {
 	MOBILE
 }
 
+## The information that's used to send to the server when joining.
 var client_info: Dictionary = {
 	"username": "Player",
 	"version": version,
 	"skin": "Default",
-	"hat": "None"
+	"hat": "None",
+	"modded": false,
+	"mods": [],
+	"platform": "unknown",
+	"uuid": ""
 }
 
-var is_lua_enabled = false # This is used to check if we can use Lua API for our mods
+## This is used to check if we can use Lua API for our mods
+var is_lua_enabled = false
 
 var hide_menu = false
 
@@ -126,16 +135,19 @@ var user_config: ConfigFile = ConfigFile.new()
 var maps_path: String = "user://maps"
 var mods_path: String = "user://mods"
 
+## Whatever or not this allows the game to save user's data
 var can_save_config = false
 
-# Disabled Mods in Mod Menu will show up here
+## Disabled Mods in Mod Menu will show up here
 var disabled_mods := []
 
-# Used to check whatever or not we have mods enabled
+## Used to check whatever or not we have mods enabled
 var has_mods_enabled := false
 
 # epic fail
 const DISCORD_LINK = "https://discord.gg/BFgQM5Wn2n"
+
+const uuid = preload("res://assets/scripts/uuid.gd")
 
 func lua_fields():
 	return [
@@ -148,7 +160,9 @@ func lua_fields():
 func _ready():
 	is_emulating_mobile = ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false) 
 	is_mobile = is_emulating_mobile or OS.has_feature("mobile")
-	is_dedicated_server = OS.has_feature("dedicated_server")
+	is_dedicated_server = OS.has_feature("dedicated_server") or ("--dediserver" in OS.get_cmdline_args() and OS.is_debug_build())
+	
+	client_info["platform"] = OS.get_name()
 	
 	if is_dedicated_server:
 		maps_path = OS.get_executable_path().get_base_dir().path_join("maps")
@@ -171,11 +185,14 @@ func load_user_config():
 	var err = config.load("user://client.cfg")
 	
 	if err != OK:
+		client_info["uuid"] = uuid.v4()
 		return
+	
 	
 	client_info["username"] = config.get_value("Player", "username", "Player")
 	client_info["skin"] = config.get_value("Player", "skin", "Default")
 	client_info["hat"] = config.get_value("Player", "hat", "None")
+	client_info["uuid"] = config.get_value("Player", "uuid", uuid.v4())
 	
 	disabled_mods = config.get_value("Mods", "disabled_mods", [])
 
@@ -183,14 +200,21 @@ func save_user_config():
 	user_config.set_value("Player", "username", client_info["username"])
 	user_config.set_value("Player", "skin", client_info["skin"])
 	user_config.set_value("Player", "hat", client_info["hat"])
+	user_config.set_value("Player", "uuid", client_info["uuid"])
 	
 	user_config.set_value("Mods", "disabled_mods", disabled_mods)
 	
 	user_config.save("user://client.cfg")
 
 func _exit_tree():
-	if not OS.has_feature("dedicated_server") and can_save_config:
+	print("===== Thank you for playing our game! =====")
+	
+	# Dedicated Servers cannot save user data (they're not the player themselves)
+	if not is_dedicated_server and can_save_config:
+		print("Saving User Data...")
 		save_user_config()
+
+
 
 func load_custom_skins(path: String):
 	var dir = DirAccess.open(path)
@@ -267,13 +291,14 @@ func get_game() -> Game:
 func rand_chance(chanc: float) -> bool:
 	return (randf() > chanc)
 
-func alert(msg: String):
+func alert(msg: String, title: String = "Alert"):
 	print(msg)
 	
 	if not Global.is_dedicated_server:
 		var window = AcceptDialog.new()
 		
 		window.dialog_text = msg
+		window.title = title
 		
 		window.connect("confirmed", window.queue_free)
 		window.dialog_hide_on_ok = false

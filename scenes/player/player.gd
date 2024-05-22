@@ -26,10 +26,16 @@ class_name Player
 @export var has_spawned = false
 @export var net_id = 1
 
+## The player has paused their game or using the computer.
+## This will be used to indicate that the player is busy (shows thinking animation).
+@export var is_paused = false
+
+## This player is dead, whatever or not it was killed by other player.
 @export var is_killed: bool = false
 
 @export var action_prefix: String = ""
 
+## The character that the player belongs to.
 @onready var character: Node2D = $Character
 
 @onready var vc_output: AudioStreamPlayer2D = $Sounds/voice
@@ -37,12 +43,17 @@ class_name Player
 
 var vc_out_playback: AudioStreamGeneratorPlayback
 
+## The game that the player is currently in.
 @export var c_game: Game
 
+## Whatever or not the player is idle (doing nothing)
+## This automatically sets this to false when the idle animation is done
 @export var is_idle: bool = false
 
+## Whatever or not the player is about to leave the game.
 var is_disappearing = false
 
+## The player is using microphone to talk
 @export var is_voicing: bool = false
 
 const MAX_VELOCITY = 300
@@ -53,8 +64,10 @@ const MAX_SPRINT_VELOCITY = 500
 var bot_move_x = 0.0
 var bot_move_y = 0.0
 
+## The chance to become the impostor (this is unused maybe?)
 var impostor_chance = 0.0
 
+## The cooldown used to stop the player killing too much.
 @export var kill_cooldown: int = 0
 
 # Experimental Voice Chat
@@ -63,9 +76,10 @@ var vc_max_buffer: int = 512
 var vc_idx: int
 var vc_effect: AudioEffectCapture
 
+## The data used for their custom skin, this is a base64 string that's saved as a png file.
 @export var custom_skin_data: String
 
-
+## Changes the player's skin, this will change the textures for the body, eyes, and mouth.
 func set_skin(tex: Texture2D) -> bool:
 	if not tex is Texture2D: return false
 	
@@ -82,10 +96,12 @@ func set_skin(tex: Texture2D) -> bool:
 	
 	return true
 
+## Gets the skin currently used for the player
 func get_skin() -> Texture2D:
 	
 	return $Character/Body.texture
 
+## Sets the hat that the player will currently wear
 func set_hat(tex: Texture2D) -> bool:
 	if not tex is Texture2D: return false
 	
@@ -98,26 +114,26 @@ func set_hat(tex: Texture2D) -> bool:
 	
 	return true
 
+## Gets the hat that the player is currently wearing.
 func get_hat() -> Texture2D:
 	return $Character/Body/Hat.texture
 
 @rpc("any_peer","call_local","reliable")
 func net_set_skin(nam: String):
-	
 	if not Global.player_skins.has(nam): 
-		print("[WARN] " + player_name + " attempted to set a skin that does not exist (name: " + nam + ")")
-		return
-	
+		push_warning(player_name + " attempted to set a skin that does not exist (name: " + nam + ")")
+		nam = "Default"
+
 	var skin = Global.player_skins[nam]["skin"]
-	
+
 	set_skin(skin)
 	skin_name = nam
 
 @rpc("any_peer","call_local","reliable")
 func net_set_hat(nam: String):
 	if not GameData.player_hats.has(nam):
-		print("[WARN] " + player_name + " attempted to set a hat that does not exist (name: " + nam + ")")
-		return
+		push_warning(player_name + " attempted to set a hat that does not exist (name: " + nam + ")")
+		nam = "None"
 	
 	var hat = GameData.player_hats[nam]
 	
@@ -217,7 +233,7 @@ func _physics_process(_delta):
 	
 	if is_local_player:
 		# Local Player (player is controlling the character)
-		if not get_node("ui/HUD/gameinfo").visible:
+		if not get_node("ui/HUD/gameinfo").visible and not c_game.pause_win.visible:
 			
 			move_x = Input.get_action_strength(action_prefix+"move_right") - Input.get_action_strength(action_prefix+"move_left")
 			move_y = Input.get_action_strength(action_prefix+"move_down") - Input.get_action_strength(action_prefix+"move_up")
@@ -237,7 +253,13 @@ func _physics_process(_delta):
 				if c_game.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
 					manual_move_x = move_x
 					manual_move_y = move_y
-		
+			
+			is_paused = false
+		else:
+			manual_move_x = 0.0
+			manual_move_y = 0.0
+			
+			is_paused = true
 		#$username.visible = false
 	else:
 		# Remote Player (player is networked or a bot)
@@ -292,6 +314,13 @@ func set_animation():
 		if Global.freeze_animations.has(animation.current_animation): 
 			is_idle = false
 			return
+	
+	if is_paused:
+		# This will use a animation to indicate that the player has paused the game
+		# or they're changing their skin or game's settings (as a host).
+		animation.play("thinking")
+		is_idle = false
+		return
 	
 	if velocity == Vector2.ZERO:
 		if not is_idle:
