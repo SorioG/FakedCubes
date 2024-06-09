@@ -156,26 +156,33 @@ func set_face(face: Global.FACE_TYPE, mood: int):
 
 func _ready():
 	if not c_game:
-		c_game = get_game()
+		if get_game():
+			c_game = get_game()
+		else:
+			c_game = Node2D.new()
 	
 	
 	if can_have_authority and c_game:
-		if c_game.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
-			if is_multiplayer_authority():
-				is_local_player = true
-				c_game.local_player = self
-				
-				LoadingScreen.hide_screen()
-				
-				vc_input.stream = AudioStreamMicrophone.new()
-				#vc_input.play()
-				
-				vc_idx = AudioServer.get_bus_index("Voice")
-				vc_effect = AudioServer.get_bus_effect(vc_idx, 0)
+		if is_multiplayer_authority():
+			is_local_player = true
+			c_game.local_player = self
+			
+			LoadingScreen.hide_screen()
+			
+			vc_input.stream = AudioStreamMicrophone.new()
+			#vc_input.play()
+			
+			vc_idx = AudioServer.get_bus_index("Voice")
+			vc_effect = AudioServer.get_bus_effect(vc_idx, 0)
 		
 		vc_out_playback = vc_output.get_stream_playback()
 	
-	
+	if Global.is_april_fools:
+		$Character/Body/Eyes.rotation_degrees = 180
+		$Character/Body/Mouth.rotation_degrees = 180
+		
+		$Character/Body/Eyes.flip_h = true
+		$Character/Body/Mouth.flip_h = true
 	
 	$camera.enabled = is_local_player
 	$AudioListener2D.current = is_local_player
@@ -342,9 +349,12 @@ func get_game() -> Game:
 func do_action(num: int):
 	if is_local_player:
 		c_game.emit_signal("local_player_used_action", num)
+		ModLoader.call_hook("local_action", [num])
 	
 	if not is_killed:
-		c_game.gamemode_node.player_do_action(self, num)
+		# Don't handle the player's action in lobby!
+		if c_game.game_state == c_game.STATE.INGAME:
+			c_game.gamemode_node.player_do_action(self, num)
 
 func _do_action(num: int):
 	if Global.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
@@ -457,6 +467,13 @@ func _process(_delta):
 				c_game.get_node("hud/vc_enable").texture_normal = load("res://assets/sprites/chaticons2.png")
 	else:
 		$voice_icon.visible = is_voicing
+	
+	if c_game is Game and not c_game.is_custom_skins_allowed:
+		if skin_name == "Custom":
+			if is_local_player:
+				Global.alert("This server has disabled custom skins, your skin was automatically set to default")
+
+			net_set_skin("Default")
 
 @rpc("any_peer", "reliable", "call_remote")
 func net_reset_player(reset_role: bool):
@@ -464,6 +481,15 @@ func net_reset_player(reset_role: bool):
 
 @rpc("any_peer", "reliable", "call_local")
 func net_load_custom_skin(_skin: String):
+	if not c_game.is_custom_skins_allowed:
+		print("[WARN] "+player_name+" tried to set a custom skin, but it wasn't allowed by this server")
+		
+		if is_local_player:
+			Global.alert("Custom Skins are not allowed in this server", "Custom Skin Error")
+		
+		net_set_skin("Default")
+		return
+	
 	var data = Marshalls.base64_to_raw(_skin)
 	
 	var img = Image.new()
@@ -473,7 +499,7 @@ func net_load_custom_skin(_skin: String):
 		print("[WARN] "+player_name+" attempted to load a invalid custom skin, using default skin instead")
 		
 		if is_local_player:
-			Global.alert("The custom skin you have selected is invalid, using default skin instead.")
+			Global.alert("The custom skin you have selected is invalid, using default skin instead.", "Custom Skin Error")
 		
 		net_set_skin("Default")
 		return

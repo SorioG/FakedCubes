@@ -33,6 +33,8 @@ func _ready():
 		$ui/panel/Animations/btns.add_child(btn)
 	
 	$lobby/spawns.visible = false
+	
+	MusicManager.fade_out()
 
 func press_load_skin():
 	$ui/SkinDialog.popup_centered()

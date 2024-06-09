@@ -64,6 +64,8 @@ func _ready():
 	
 	setup_gamemodes()
 	
+	MusicManager.fade_out()
+	
 	# Warn the user before making the map with mods enabled
 	if Global.has_mods_enabled:
 		Global.alert("It's highly recommended that you disable mods before making one, unless you want to use them.\n

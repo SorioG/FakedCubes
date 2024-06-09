@@ -226,7 +226,7 @@ func print_error():
 		msgs += "[" + mod + "] " + msg + "\n"
 	
 	if not Global.is_dedicated_server and not msgs.is_empty():
-		Global.alert("Failed to load mods:\n" + msgs)
+		Global.alert("Failed to load mods, check the console (or a log file) for more information", "Error")
 
 func get_mod_path(n: String) -> String:
 	if loaded_mod_dirs.has(n):
@@ -241,6 +241,7 @@ func get_mod_asset(nam: String) -> Resource:
 	return null
 
 func add_hook(hook: String, f: String):
+	# TODO: Allow adding a hook with a lua function instead of a string
 	if not mod_hooks.has(hook):
 		mod_hooks[hook] = []
 	

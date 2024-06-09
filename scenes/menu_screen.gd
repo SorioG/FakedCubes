@@ -104,8 +104,8 @@ func _ready():
 	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.BODY, 4)
 	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.MOUTH, 6)
 	
-	$screen1/Control/menu_player.set_face(Global.FACE_TYPE.EYES, randi_range(0,8))
-	$screen1/Control/menu_player.set_face(Global.FACE_TYPE.MOUTH, randi_range(0,8))
+	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.EYES, randi_range(0,8))
+	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.MOUTH, randi_range(0,8))
 	
 	var sk = Global.player_skins[Global.client_info["skin"]]["skin"]
 	var hattex = GameData.player_hats[Global.client_info["hat"]]
@@ -118,6 +118,17 @@ func _ready():
 	$screen1/Control/menu_player.player_name = Global.client_info["username"]
 	
 	_spectate_player()
+	
+	if Global.is_april_fools:
+		prankify()
+
+func prankify():
+	# just for the funny
+	$UI/StartLabel.text = "Key any press"
+	$UI/VersionLabel.text = Global.version.reverse()
+	
+	$UI/menu/Logo.texture = load("res://assets/sprites/logo_joke.png")
+	$UI/StartLogo.texture = load("res://assets/sprites/logo_joke.png")
 
 func _input(event):
 	if Global.hide_menu: return
@@ -144,6 +155,15 @@ func _input(event):
 		#$select.play()
 		
 		$UI/menu/mbtns/singleplayer.grab_focus()
+	
+	if event is InputEventKey:
+		# Old Music and Logo Easter Egg
+		if event.keycode == KEY_MINUS and event.pressed:
+			print("[Game] Found a old logo/music easter egg")
+			#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.EYES, Global.MOOD_TYPE.SCARED)
+			#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.MOUTH, Global.MOOD_TYPE.HAPPY)
+			$UI/menu/Logo.texture = load("res://assets/sprites/logo_old.png")
+			MusicManager.play_music("title_old")
 
 func _spectate_player():
 	choose_rand_map()
@@ -186,6 +206,8 @@ func _process(_delta):
 		#camera.position -= Vector2(200, 0)
 	#else:
 	camera.position += Vector2(.1, .1)
+	
+	$screen1/Control/menu_player.player_name = Global.client_info["username"]
 
 func _bot_spawned(plr: Player):
 	plr.player_name = ""

@@ -38,6 +38,10 @@ func _ready():
 	print("--- Done Loading ---")
 	LoadingScreen.hide_screen()
 	
+	if DisplayServer.get_name() == "headless" and not Global.is_dedicated_server:
+		print("[WARN] This game was launched in headless mode,
+		 please use --dediserver while in headless mode to host a dedicated server")
+	
 	if not Global.is_dedicated_server:
 		print("Faked Cubes - version: " + Global.version)
 	
@@ -47,6 +51,8 @@ func _ready():
 		
 		# Of Course, we need to load server configuration.
 		Global.load_server_config()
+		
+		handle_arguments()
 		
 		print(" ")
 		print("---- Faked Cubes Dedicated Server ----")

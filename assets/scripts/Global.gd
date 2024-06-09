@@ -25,7 +25,10 @@ enum GAME_TYPE {
 	MULTIPLAYER_CLIENT = 3
 }
 
-
+enum NET_TYPE {
+	DIRECT = 1,
+	WEBRTC
+}
 
 var maps = {
 	"lobby": load("res://scenes/maps/lobby.tscn"),
@@ -113,14 +116,15 @@ enum PLATFORM_TYPE {
 
 ## The information that's used to send to the server when joining.
 var client_info: Dictionary = {
-	"username": "Player",
-	"version": version,
-	"skin": "Default",
-	"hat": "None",
-	"modded": false,
-	"mods": [],
-	"platform": "unknown",
-	"uuid": ""
+	"username": "Player", # Client Username
+	"version": version, # Version of the game used
+	"skin": "Default", # Skin used by the client, custom skins start with "custom:"
+	"hat": "None", # Hat used by the client
+	"modded": false, # Whatever or not the client is modded
+	"mods": [], # List of mods loaded by the client (does not show client-side mods)
+	"platform": "unknown", # Platform used by the client (Linux, Windows, Android, etc.)
+	"uuid": "", # Client UUID for identity purposes (server bans and more)
+	"discord_id": 0 # Discord User ID automatically set by Rich Presence
 }
 
 ## This is used to check if we can use Lua API for our mods
@@ -144,10 +148,16 @@ var disabled_mods := []
 ## Used to check whatever or not we have mods enabled
 var has_mods_enabled := false
 
+var is_april_fools := false
+
 # epic fail
 const DISCORD_LINK = "https://discord.gg/BFgQM5Wn2n"
 
 const uuid = preload("res://assets/scripts/uuid.gd")
+
+const MAX_PLAYERS := 16
+
+signal discord_join_request(user)
 
 func lua_fields():
 	return [
@@ -177,7 +187,13 @@ func _ready():
 	DirAccess.make_dir_absolute("user://skins")
 	DirAccess.make_dir_absolute(mods_path)
 	
+	is_april_fools = ("--force-april-fools" in OS.get_cmdline_args()) and OS.is_debug_build()
 	
+	var date = Time.get_datetime_dict_from_system()
+	
+	# Right time to fool players.
+	if date.month == Time.MONTH_APRIL and date.day == 1:
+		is_april_fools = true
 
 func load_user_config():
 	var config = user_config
@@ -194,6 +210,12 @@ func load_user_config():
 	client_info["hat"] = config.get_value("Player", "hat", "None")
 	client_info["uuid"] = config.get_value("Player", "uuid", uuid.v4())
 	
+	# Empty UUID for the player is worse ngl
+	# TODO: Check for the valid UUID before regenerating
+	if client_info["uuid"].is_empty():
+		print("[WARN] Player UUID is empty, regenerating one..")
+		client_info["uuid"] = uuid.v4()
+	
 	disabled_mods = config.get_value("Mods", "disabled_mods", [])
 
 func save_user_config():
@@ -207,7 +229,10 @@ func save_user_config():
 	user_config.save("user://client.cfg")
 
 func _exit_tree():
-	print("===== Thank you for playing our game! =====")
+	if is_april_fools:
+		print("===== You thank for game playing our! =====")
+	else:
+		print("===== Thank you for playing our game! =====")
 	
 	# Dedicated Servers cannot save user data (they're not the player themselves)
 	if not is_dedicated_server and can_save_config:
@@ -316,17 +341,23 @@ func load_server_config():
 	var err = config.load(path)
 	
 	if err != OK:
+		# Game Configuration
 		config.set_value("Game", "gamemode", 0)
 		config.set_value("Game", "max_bots", 0)
 		config.set_value("Game", "lobby_map", "default")
 		config.set_value("Game", "use_custom_maps", [])
 		
+		# Server Configuration
 		config.set_value("Server", "port", Global.server_port)
 		config.set_value("Server", "name", "Dedicated Server")
 		config.set_value("Server", "allow_early_join", false)
 		config.set_value("Server", "allow_custom_skins", true)
 		config.set_value("Server", "allow_modded_clients", true)
 		config.set_value("Server", "voice_chat", true)
+		
+		# Discord-related Configuration
+		config.set_value("Discord", "allow_invites", true)
+		config.set_value("Discord", "show_server_name", true)
 		
 		config.save(path)
 	

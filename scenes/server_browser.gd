@@ -12,7 +12,7 @@ func _ready():
 	var err = listener_peer.bind(9887)
 	
 	if err != OK:
-		print("Failed to listen for servers")
+		print("[LAN] Failed to listen for servers (another instance already open?)")
 	else:
 		$listener_timer.connect("timeout", _on_listen)
 		$listener_timer.start()
@@ -29,9 +29,10 @@ func _on_listen():
 		var ip = listener_peer.get_packet_ip()
 		
 		# That way we know the packet comes from Faked Cubes Server
-		if packet.begins_with("FC@"):
-			var data = packet.split("@")[1]
-			var info = JSON.parse_string(data)
+		if packet.begins_with("FC|"):
+			var data = packet.split("|")[1]
+			var decoded_data = Marshalls.base64_to_utf8(data)
+			var info = JSON.parse_string(decoded_data)
 			var outdated = false
 			
 			var sname = info["name"]
