@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://k1i5wlt0ju76"]
+[gd_scene load_steps=16 format=3 uid="uid://k1i5wlt0ju76"]
 
 [ext_resource type="Script" path="res://scenes/menu_screen.gd" id="1_38ftq"]
 [ext_resource type="PackedScene" uid="uid://drioxemoktbtr" path="res://scenes/player/player.tscn" id="3_1v1pj"]
@@ -9,7 +9,6 @@
 [ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="5_t0mf4"]
 [ext_resource type="Texture2D" uid="uid://ch0jlbqe5gjh0" path="res://assets/sprites/action_icons7.png" id="6_o5dxp"]
 [ext_resource type="Texture2D" uid="uid://dfgv02bmqcic7" path="res://assets/sprites/action_icons5.png" id="6_rtgfl"]
-[ext_resource type="PackedScene" uid="uid://dfbk18kcp12t1" path="res://scenes/server_browser.tscn" id="6_tvt5c"]
 [ext_resource type="AudioStream" uid="uid://c4hel8s01gyu0" path="res://assets/sounds/select2.ogg" id="8_p6wv7"]
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="9_ktiug"]
 [ext_resource type="Texture2D" uid="uid://d06pjycy5a67j" path="res://assets/sprites/discord-mark-blue.png" id="10_dvphd"]
@@ -85,7 +84,6 @@ flat = true
 
 [node name="joingame" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
-focus_neighbor_right = NodePath("../../../ServerBrowser")
 text = "Join Game"
 icon = ExtResource("6_o5dxp")
 flat = true
@@ -185,19 +183,6 @@ text = "Press any key"
 label_settings = SubResource("LabelSettings_kxilj")
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="ServerBrowser" parent="UI" instance=ExtResource("6_tvt5c")]
-visible = false
-custom_minimum_size = Vector2(500, 500)
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = -668.0
-offset_top = -250.0
-offset_right = -34.0
-offset_bottom = 250.0
-grow_horizontal = 0
 
 [node name="descardbutton" type="TextureButton" parent="UI"]
 editor_description = "Discord Button was going to be hidden due to some potential issues. (Privacy)"

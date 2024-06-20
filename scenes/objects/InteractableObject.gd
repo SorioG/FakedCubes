@@ -4,6 +4,7 @@ class_name InteractableObject
 var player_is_touching = false
 @onready var touch_area = $touch_area
 
+## Whatever or not to show the action hint while in near to the object
 @export var show_hint: bool = true
 
 var c_game: Game
@@ -19,7 +20,6 @@ func _ready():
 func _physics_process(_delta):
 	var bodies = touch_area.get_overlapping_bodies()
 	
-	
 	player_is_touching = false
 	
 	if not c_game: return
@@ -29,8 +29,6 @@ func _physics_process(_delta):
 			player_is_touching = true
 	
 	$touch_hint.visible = player_is_touching and show_hint
-	
-	
 
 func _process_used(action: int):
 	if player_is_touching:

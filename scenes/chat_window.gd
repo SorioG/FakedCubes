@@ -21,7 +21,7 @@ func add_message(user: String, message: String, avatar: Texture2D = null):
 	clone.get_node("panel/box/info/message").text = message
 	
 	clone.visible = true
-	clone.custom_minimum_size = Vector2(0, 100)
+	clone.custom_minimum_size = Vector2(0, 200)
 	messages.add_child(clone)
 	
 	await get_tree().process_frame

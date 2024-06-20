@@ -33,6 +33,8 @@ class_name Player
 ## This player is dead, whatever or not it was killed by other player.
 @export var is_killed: bool = false
 
+@export var is_ghost: bool = false
+
 @export var action_prefix: String = ""
 
 ## The character that the player belongs to.
@@ -79,6 +81,12 @@ var vc_effect: AudioEffectCapture
 ## The data used for their custom skin, this is a base64 string that's saved as a png file.
 @export var custom_skin_data: String
 
+var hud_pickplayer_tag: String = ""
+
+var bot_witness_killer: Player
+
+signal hud_player_picked(plr: Player, tag: String)
+
 ## Changes the player's skin, this will change the textures for the body, eyes, and mouth.
 func set_skin(tex: Texture2D) -> bool:
 	if not tex is Texture2D: return false
@@ -98,8 +106,11 @@ func set_skin(tex: Texture2D) -> bool:
 
 ## Gets the skin currently used for the player
 func get_skin() -> Texture2D:
-	
 	return $Character/Body.texture
+
+## Gets a still image for the player's skin, useful for player avatars
+func get_still_image() -> Image:
+	return Global.get_skin_still_image(get_skin())
 
 ## Sets the hat that the player will currently wear
 func set_hat(tex: Texture2D) -> bool:
@@ -161,9 +172,8 @@ func _ready():
 		else:
 			c_game = Node2D.new()
 	
-	
 	if can_have_authority and c_game:
-		if is_multiplayer_authority():
+		if is_multiplayer_authority() and not is_bot:
 			is_local_player = true
 			c_game.local_player = self
 			
@@ -195,7 +205,17 @@ func _ready():
 	if is_local_player:
 		MusicManager.fade_out()
 		
-		net_set_skin.rpc(Global.client_info["skin"])
+		var cskin = Global.client_info["skin"]
+		
+		if cskin.begins_with("custom:"):
+			var skin: Texture2D = Global.custom_skins[cskin.split(":")[1]]["skin"]
+			var img = skin.get_image()
+			var buff = img.save_png_to_buffer()
+			
+			net_load_custom_skin.rpc(Marshalls.raw_to_base64(buff))
+		else:
+			net_set_skin.rpc(cskin)
+		
 		net_set_hat.rpc(Global.client_info["hat"])
 		
 		player_name = Global.client_info["username"]
@@ -206,14 +226,17 @@ func _ready():
 	if is_bot and c_game.bot_change_skin:
 		set_skin(Global.BOT_SKIN)
 	
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("player_spawn", [self, has_spawned])
+	
 	if has_spawned:
 		animation.play("appear")
 		has_spawned = false
 	
+	
 	if Global.is_mobile:
 		$camera.zoom += Vector2(0.3, 0.3)
 	
-	ModLoader.call_hook("player_spawn", [self, has_spawned])
 
 
 func _physics_process(_delta):
@@ -235,8 +258,6 @@ func _physics_process(_delta):
 	var move_y = 0.0
 	
 	$username.text = player_name
-	
-	
 	
 	if is_local_player:
 		# Local Player (player is controlling the character)
@@ -288,16 +309,19 @@ func _physics_process(_delta):
 			$username.visible = not is_killed
 	
 	if is_killed:
-		$camera.offset += Vector2(move_x, move_y) * 30
-		
-		move_x = 0
-		move_y = 0
+		if not is_ghost:
+			$camera.offset += Vector2(move_x, move_y) * 30
+			
+			move_x = 0
+			move_y = 0
 		
 		#animation.play("death")
 		
 		# Fix a bug where the player is still dead in the lobby
 		if c_game.game_state == c_game.STATE.LOBBY:
 			is_killed = false
+			is_ghost = false
+			$camera.offset = Vector2.ZERO
 	
 	if is_running:
 		velocity = Vector2(move_x, move_y) * MAX_SPRINT_VELOCITY
@@ -307,7 +331,7 @@ func _physics_process(_delta):
 	
 	move_and_slide()
 	
-	if can_animate and not is_killed:
+	if can_animate:
 		set_animation()
 
 func set_animation():
@@ -322,11 +346,17 @@ func set_animation():
 			is_idle = false
 			return
 	
+	if is_killed and not is_ghost: return
+	
 	if is_paused:
 		# This will use a animation to indicate that the player has paused the game
 		# or they're changing their skin or game's settings (as a host).
 		animation.play("thinking")
 		is_idle = false
+		return
+	
+	if is_ghost:
+		animation.play("ghost")
 		return
 	
 	if velocity == Vector2.ZERO:
@@ -349,7 +379,8 @@ func get_game() -> Game:
 func do_action(num: int):
 	if is_local_player:
 		c_game.emit_signal("local_player_used_action", num)
-		ModLoader.call_hook("local_action", [num])
+		if Global.is_lua_enabled:
+			ModLoader.call_hook("local_action", [num])
 	
 	if not is_killed:
 		# Don't handle the player's action in lobby!
@@ -365,8 +396,6 @@ func _do_action(num: int):
 func bot_tick() -> Array[int]:
 	var move_x = 0
 	var move_y = 0
-	
-	
 	
 	var game: Game = c_game
 	
@@ -425,7 +454,18 @@ func get_players_nearby() -> Array[Player]:
 	
 	for obj in $use_area.get_overlapping_bodies():
 		if obj == self: continue
+		if not obj.visible: continue
 		if obj is Player:
+			if obj.is_ghost: continue
+			res.append(obj)
+	
+	return res
+
+func get_interactable_nearby() -> Array[InteractableObject]:
+	var res: Array[InteractableObject] = []
+	
+	for obj in $use_area.get_overlapping_bodies():
+		if obj is InteractableObject:
 			res.append(obj)
 	
 	return res
@@ -435,7 +475,9 @@ func get_players_in_view() -> Array[Player]:
 	
 	for obj in $view_area.get_overlapping_bodies():
 		if obj == self: continue
+		if not obj.visible: continue
 		if obj is Player:
+			if obj.is_ghost: continue
 			res.append(obj)
 	
 	return res
@@ -515,4 +557,51 @@ func kill_player():
 	is_killed = true
 	animation.play("death")
 	
-	ModLoader.call_hook("player_died", [self])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("player_died", [self])
+
+func ask_to_pick_player(title: String = "Pick a player", exclude_self=false, hide_dead=false, tag: String = ""):
+	if not is_local_player:
+		if is_bot: bot_pick_player(exclude_self, tag)
+		return
+	
+	var win: PopupPanel = hud.get_node("pickplayer")
+	hud_pickplayer_tag = tag
+	
+	hud.call("set_pickplayer_list", exclude_self, hide_dead)
+	win.get_node("panel/title").text = title
+	
+	win.popup_centered()
+
+func bot_pick_player(exclude_self=false, tag = ""):
+	var plrs: Array[Player] = []
+	
+	for p in c_game.get_alive_players():
+		if p == self and exclude_self: continue
+		
+		plrs.append(p)
+	
+	if plrs.size() < 1:
+		return
+	
+	var picked = plrs.pick_random()
+	
+	net_picked_player.rpc(picked.name, tag)
+
+func bot_force_pick_player(plr: Player, tag = ""):
+	if plr.is_killed: return
+	net_picked_player.rpc(plr.name, tag)
+
+@rpc("any_peer", "call_local", "reliable")
+func net_picked_player(nam: String, tag: String):
+	var plr: Player
+	
+	for p in c_game.get_players():
+		if p.name == nam:
+			plr = p
+			break
+	
+	if not plr: return
+	emit_signal("hud_player_picked", plr, tag)
+	
+	c_game.gamemode_node.hud_picked_player(plr, tag, self)

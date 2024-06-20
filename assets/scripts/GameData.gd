@@ -49,3 +49,10 @@ var player_hats: Dictionary = {
 	"Cube Clones": load("res://assets/sprites/hats/hat8.png"),
 	"Headphones": load("res://assets/sprites/hats/hat9.png")
 }
+
+var loading_screen_art: Array[Dictionary] = [
+	{
+		"art": load("res://assets/fanart/fanart_v1_1.png"),
+		"credits": "Fanart by @rafilasetop"
+	}
+]

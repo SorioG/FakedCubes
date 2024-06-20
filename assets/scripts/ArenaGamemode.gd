@@ -49,8 +49,7 @@ func game_start():
 		
 		i += 1
 	
-	if Global.is_dedicated_server:
-		print("[Arena] Maximum Kills to end the game: " + str(max_kills))
+	print("[Arena] Maximum Kills to end the game: " + str(max_kills))
 
 func check_end_game() -> int:
 	if winner is Player:
@@ -121,7 +120,13 @@ func player_do_action(_player: Player, _action: int):
 				plr.animation.play("RESET")
 				plr.animation.play("damage")
 			
-			
+
+func player_join_early(player: Player):
+	game.custom_rpc.rpc({"type": "revive", "name": player.name})
+	game.custom_rpc.rpc({"type": "join_early", "name": player.name})
+	player_health[player] = max_health
+	player_kills[player] = 0
+	player.kill_cooldown = 50
 
 func game_tick():
 	for player in game.get_dead_players():
@@ -143,7 +148,7 @@ func bot_tick(bot: Player):
 		
 		bot.bot_try_kill()
 	else:
-		bot.is_running = true
+		bot.is_running = false
 
 func show_results(label: Label, player: Player):
 	if is_instance_valid(winner):
@@ -180,6 +185,14 @@ func receive_custom_rpc(_data: Dictionary, _id: int):
 		if player is Player:
 			player_health[player] = max_health
 			protect_player(player)
+	
+	if _data["type"] == "joined_early" and _id == 1:
+		var player = game.players_node.get_node_or_null(NodePath(_data["name"]))
+		
+		if player is Player:
+			player_health[player] = max_health
+			player_kills[player] = 0
+			player.kill_cooldown = 50
 	
 	if _data["type"] == "death" and _id == 1:
 		var player = game.players_node.get_node_or_null(NodePath(_data["name"]))

@@ -123,9 +123,19 @@ func _on_activity_join(secret):
 	if net_type == "direct":
 		print("[Discord] Connecting to the server by invite (direct mode)")
 		Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_CLIENT
+		Global.net_type = Global.NET_TYPE.DIRECT
 		
 		Global.server_ip = code_split[1]
 		Global.server_port = int(code_split[2])
+		
+		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
+	elif net_type == "webrtc":
+		print("[Discord] Connecting to the server by invite (webrtc mode)")
+		Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_CLIENT
+		Global.net_type = Global.NET_TYPE.WEBRTC
+		
+		Global.server_ip = code_split[1]
+		#Global.server_port = int(code_split[2])
 		
 		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
 	else:
@@ -142,12 +152,16 @@ func get_join_secret() -> String:
 	var join_code = ""
 	var game: Game = Global.get_game()
 	
-	join_code += "direct"
-	if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
-		join_code += "|" + Global.server_ip
-	else:
-		join_code += "|" + game.get_local_ip()
-		join_code += "|" + str(Global.server_port)
+	if Global.net_type == Global.NET_TYPE.DIRECT:
+		join_code += "direct"
+		if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+			join_code += "|" + Global.server_ip
+		else:
+			join_code += "|" + game.get_local_ip()
+			join_code += "|" + str(Global.server_port)
+	elif Global.net_type == Global.NET_TYPE.DIRECT:
+		join_code += "webrtc"
+		join_code += "|" + game.webrtc_lobby_id
 	
 	return join_code
 

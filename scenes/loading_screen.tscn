@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://by5yq33rm4dh1"]
+[gd_scene load_steps=5 format=3 uid="uid://by5yq33rm4dh1"]
 
 [ext_resource type="Script" path="res://scenes/loading_screen.gd" id="1_4pdcq"]
 [ext_resource type="Texture2D" uid="uid://ilmyuxi1v6m3" path="res://assets/sprites/logo.png" id="2_e5n2h"]
@@ -6,6 +6,11 @@
 [sub_resource type="LabelSettings" id="LabelSettings_tl1k3"]
 font_size = 32
 outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_h5a6n"]
+font_color = Color(0.265361, 0.265361, 0.265361, 1)
+outline_size = 4
 outline_color = Color(0, 0, 0, 1)
 
 [node name="LoadingScreen" type="CanvasLayer"]
@@ -27,6 +32,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+expand_mode = 1
 stretch_mode = 6
 
 [node name="logo" type="TextureRect" parent="."]
@@ -63,3 +69,15 @@ text = "Loading..."
 label_settings = SubResource("LabelSettings_tl1k3")
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="artcredit" type="Label" parent="."]
+custom_minimum_size = Vector2(400, 0)
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 49.0
+offset_top = 121.0
+offset_right = 177.0
+offset_bottom = 144.0
+grow_vertical = 2
+label_settings = SubResource("LabelSettings_h5a6n")

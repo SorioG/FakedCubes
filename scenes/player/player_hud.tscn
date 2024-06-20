@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dpswufreepa67"]
+[gd_scene load_steps=13 format=3 uid="uid://dpswufreepa67"]
 
 [ext_resource type="Texture2D" uid="uid://dcx05njwsiixq" path="res://assets/sprites/action_icons1.png" id="1_b5c1i"]
 [ext_resource type="Script" path="res://scenes/player/player_hud.gd" id="1_hdqkj"]
@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="6_4telq"]
 [ext_resource type="Texture2D" uid="uid://dqbisq1u0ap4o" path="res://assets/sprites/hats/hat1.png" id="6_n3wd2"]
 [ext_resource type="AudioStream" uid="uid://c4hel8s01gyu0" path="res://assets/sounds/select2.ogg" id="7_uoudm"]
+[ext_resource type="Texture2D" uid="uid://b08h8pxsow8n" path="res://assets/sprites/gameicon.png" id="9_iuxtk"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hb1vw"]
 bg_color = Color(0.137255, 0.137255, 0.137255, 0.478431)
@@ -19,6 +20,15 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="LabelSettings" id="LabelSettings_sasko"]
+outline_size = 5
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ailtg"]
+font_color = Color(0.698157, 0.124039, 0.164055, 1)
+outline_size = 5
+outline_color = Color(0, 0, 0, 1)
 
 [node name="HUD" type="Control"]
 layout_mode = 3
@@ -238,3 +248,91 @@ stream = ExtResource("6_4telq")
 
 [node name="select2" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("7_uoudm")
+
+[node name="pickplayer" type="PopupPanel" parent="."]
+size = Vector2i(700, 420)
+
+[node name="panel" type="VBoxContainer" parent="pickplayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 696.0
+offset_bottom = 416.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="title" type="Label" parent="pickplayer/panel"]
+layout_mode = 2
+text = "Pick a player to do anything"
+label_settings = SubResource("LabelSettings_sasko")
+horizontal_alignment = 1
+
+[node name="scroll" type="ScrollContainer" parent="pickplayer/panel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="list" type="GridContainer" parent="pickplayer/panel/scroll"]
+layout_mode = 2
+columns = 3
+
+[node name="example" type="Button" parent="pickplayer/panel/scroll/list"]
+layout_mode = 2
+text = "Player"
+icon = ExtResource("9_iuxtk")
+
+[node name="accused_voting" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -144.0
+offset_bottom = -63.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ColorRect" type="ColorRect" parent="accused_voting"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 106.0
+offset_top = -9.0
+offset_right = -86.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0705882, 0.0705882, 0.0705882, 0.556863)
+
+[node name="box" type="VBoxContainer" parent="accused_voting"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="label" type="Label" parent="accused_voting/box"]
+layout_mode = 2
+text = "Player has been accused"
+label_settings = SubResource("LabelSettings_ailtg")
+horizontal_alignment = 1
+
+[node name="btns" type="HBoxContainer" parent="accused_voting/box"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="yesbtn" type="Button" parent="accused_voting/box/btns"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Yes"
+
+[node name="nobtn" type="Button" parent="accused_voting/box/btns"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "No"

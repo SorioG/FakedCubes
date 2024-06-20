@@ -30,7 +30,15 @@ tab_alignment = 1
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_n3683")
 item_count = 1
-item_0/text = "Searching for servers..."
+item_0/text = "Searching for servers on local network"
+item_0/selectable = false
+
+[node name="Public" type="ItemList" parent="tabs"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_n3683")
+item_count = 1
+item_0/text = "Requesting Server List from CubeNet"
 item_0/selectable = false
 
 [node name="Direct" type="VBoxContainer" parent="tabs"]
@@ -84,3 +92,6 @@ vertical_alignment = 1
 
 [node name="listener_timer" type="Timer" parent="."]
 wait_time = 2.0
+
+[node name="PublicListRequest" type="HTTPRequest" parent="."]
+use_threads = true

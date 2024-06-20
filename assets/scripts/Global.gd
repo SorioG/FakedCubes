@@ -26,7 +26,7 @@ enum GAME_TYPE {
 }
 
 enum NET_TYPE {
-	DIRECT = 1,
+	DIRECT = 0,
 	WEBRTC
 }
 
@@ -44,6 +44,7 @@ const EMULATE_MOBILE = false
 const BOT_SKIN = preload("res://assets/sprites/player-bot.png")
 
 var net_mode: GAME_TYPE = GAME_TYPE.SINGLEPLAYER
+var net_type: NET_TYPE = NET_TYPE.DIRECT
 
 var server_ip = "127.0.0.1"
 var server_port = 7230
@@ -67,7 +68,9 @@ var freeze_animations: Array[String] = [
 ]
 
 var stop_animations: Array[String] = [
-	"appearing"
+	"appearing",
+	"reported",
+	"scared"
 ]
 
 var idle_animations: Array[String] = [
@@ -150,12 +153,34 @@ var has_mods_enabled := false
 
 var is_april_fools := false
 
+var cubenet_server_url := ""
+var cubenet_headers = ["User-Agent: FakedCubes/" + version]
+
+var cubenet_is_public := false
+
+var is_exiting := false
+
 # epic fail
 const DISCORD_LINK = "https://discord.gg/BFgQM5Wn2n"
 
 const uuid = preload("res://assets/scripts/uuid.gd")
 
+var uuid_regex = RegEx.create_from_string("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$")
+
 const MAX_PLAYERS := 16
+
+const CUBENET_SERVER_DEV := "http://localhost:7400"
+
+const WEBRTC_ICE_SERVERS := [
+	{
+		"urls": [
+			"stun:stun.l.google.com:19302",
+			"stun:stunserver.stunprotocol.org:3478"
+		]
+	}
+]
+
+var server_thread: Thread = Thread.new()
 
 signal discord_join_request(user)
 
@@ -169,7 +194,7 @@ func lua_fields():
 
 func _ready():
 	is_emulating_mobile = ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false) 
-	is_mobile = is_emulating_mobile or OS.has_feature("mobile")
+	is_mobile = is_emulating_mobile or DisplayServer.is_touchscreen_available()
 	is_dedicated_server = OS.has_feature("dedicated_server") or ("--dediserver" in OS.get_cmdline_args() and OS.is_debug_build())
 	
 	client_info["platform"] = OS.get_name()
@@ -177,6 +202,8 @@ func _ready():
 	if is_dedicated_server:
 		maps_path = OS.get_executable_path().get_base_dir().path_join("maps")
 		mods_path = OS.get_executable_path().get_base_dir().path_join("mods")
+		
+		
 	
 	#if ClassDB.class_exists("LuaAPI") and ClassDB.is_class_enabled("LuaAPI"):
 	if not OS.has_feature("DisableLua"):
@@ -194,6 +221,10 @@ func _ready():
 	# Right time to fool players.
 	if date.month == Time.MONTH_APRIL and date.day == 1:
 		is_april_fools = true
+	
+	if not uuid_regex.is_valid():
+		if OS.is_debug_build():
+			print("[Debug] UUID Regex is invalid, the game won't check for invalid UUIDs")
 
 func load_user_config():
 	var config = user_config
@@ -211,12 +242,17 @@ func load_user_config():
 	client_info["uuid"] = config.get_value("Player", "uuid", uuid.v4())
 	
 	# Empty UUID for the player is worse ngl
-	# TODO: Check for the valid UUID before regenerating
-	if client_info["uuid"].is_empty():
-		print("[WARN] Player UUID is empty, regenerating one..")
+	if client_info["uuid"].is_empty() or not is_uuid_valid(client_info["uuid"]):
+		print("[WARN] Player UUID is empty or invalid, regenerating one..")
 		client_info["uuid"] = uuid.v4()
 	
 	disabled_mods = config.get_value("Mods", "disabled_mods", [])
+	
+	var cubenet_server_default = ""
+	if OS.is_debug_build():
+		cubenet_server_default = CUBENET_SERVER_DEV
+	
+	cubenet_server_url = config.get_value("CubeNet", "server_url", cubenet_server_default)
 
 func save_user_config():
 	user_config.set_value("Player", "username", client_info["username"])
@@ -226,9 +262,13 @@ func save_user_config():
 	
 	user_config.set_value("Mods", "disabled_mods", disabled_mods)
 	
+	user_config.set_value("CubeNet", "server_url", cubenet_server_url)
+	
 	user_config.save("user://client.cfg")
 
 func _exit_tree():
+	is_exiting = true
+	
 	if is_april_fools:
 		print("===== You thank for game playing our! =====")
 	else:
@@ -238,6 +278,9 @@ func _exit_tree():
 	if not is_dedicated_server and can_save_config:
 		print("Saving User Data...")
 		save_user_config()
+	
+	if server_thread.is_alive():
+		server_thread.wait_to_finish()
 
 
 
@@ -266,6 +309,8 @@ func load_custom_skins(path: String):
 					
 					if is_icon:
 						custom_skins[skinname]["icon"] = tex
+						
+						print("Loaded icon for custom skin: " + skinname)
 					else:
 						custom_skins[skinname]["skin"] = tex
 					
@@ -367,3 +412,92 @@ func load_server_config():
 
 func _process(_delta):
 	client_info["version"] = version
+	
+	is_mobile = DisplayServer.is_touchscreen_available()
+
+func _input(event):
+	if event is InputEventKey:
+		if event.keycode == KEY_F11 and event.is_pressed():
+			# Toggle Fullscreen when pressing F11
+			if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			else:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func is_uuid_valid(uid: String) -> bool:
+	if not uuid_regex.is_valid(): return true
+	
+	# Try to search for the valid UUID
+	var res = uuid_regex.search(uid)
+	
+	if res is RegExMatch:
+		return true
+	
+	return false
+
+func start_server_thread():
+	if not Global.is_dedicated_server: return
+	
+	if not ("--no-input" in OS.get_cmdline_args()):
+		print("Type 'help' for the list of commands")
+		server_thread.start(_server_console_thread)
+
+func _server_console_thread():
+	var text = ""
+	while text != "quit":
+		text = OS.read_string_from_stdin().strip_edges()
+		_handle_console_command.call_deferred(text, _on_server_cmd)
+	
+	get_tree().quit()
+
+func _handle_console_command(cmd: String, callback: Callable):
+	var args = cmd.split(" ")
+	var game: Game = get_game()
+	
+	if game:
+		game._handle_command(args, callback)
+	else:
+		callback.call("You cannot use the commands while the server is starting")
+
+func _on_server_cmd(res: String):
+	print(res)
+
+
+func get_skin_still_image(skin: Texture2D) -> Image:
+	# This might be almost complex, but this will get a image with character parts included.
+	var body_img = skin.get_image()
+	
+	var img = Image.create(64, 64, false, body_img.get_format())
+	
+	#var rect = Rect2i(0, 0, 64, 64)
+	var dest = Vector2i(0, 0)
+	
+	img.blit_rect(body_img, Rect2i(0, 0, 64, 64), dest)
+	img.blend_rect(body_img, Rect2i(0, 64, 64, 64), dest)
+	img.blend_rect(body_img, Rect2i(0, 128, 64, 64), dest)
+	
+	return img
+
+func get_skin_by_name(nam: String) -> Texture2D:
+	if nam.begins_with("custom:"):
+		# Trying to load a custom skin
+		nam = nam.split(":")[1]
+		if custom_skins.has(nam):
+			return custom_skins[nam]["skin"]
+		else:
+			push_error("Cannot find custom skin with name ", nam)
+			return player_skins["Default"]["skin"]
+	else:
+		# Bulit-in Skin
+		if player_skins.has(nam):
+			return player_skins[nam]["skin"]
+		else:
+			push_error("Cannot find skin with name ", nam)
+			return player_skins["Default"]["skin"]
+
+func cubenet_get_websocket() -> String:
+	var url = Global.cubenet_server_url
+	url = url.replace("http", "ws")
+	url = url.replace("https", "wss")
+	
+	return url

@@ -128,7 +128,7 @@ func screenshot():
 	
 	await get_tree().create_timer(0.5).timeout
 	
-	var center = $thumbcam.get_screen_center_position()
+	#var center = $thumbcam.get_screen_center_position()
 	
 	var view_rect = get_viewport_rect()
 	

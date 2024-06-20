@@ -72,7 +72,6 @@ func _ready():
 					This might cause some problems when trying to save/load the maps")
 
 func _process(_delta):
-	set_cursor()
 	
 	if current_tool == TOOL.DRAW and is_drawing:
 		draw_tile()
@@ -124,9 +123,12 @@ func set_tool(t: TOOL):
 	
 	if current_tool == TOOL.DRAW:
 		current_draw_tool = DRAW_TOOL.SOLID
+	
+	#set_cursor()
 
 func set_draw_tool(t: DRAW_TOOL):
 	current_draw_tool = t
+	
 
 func _exit_tree():
 	DisplayServer.cursor_set_shape(DisplayServer.CURSOR_ARROW)
@@ -201,7 +203,7 @@ func _object_tool_selected(id: int):
 	elif id == 3:
 		$hud/customobjectfile.popup_centered_ratio()
 
-func add_object_to_list(node: Node2D):
+func add_object_to_list(_node: Node2D):
 	pass
 
 func _game_pressed(id: int):

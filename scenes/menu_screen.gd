@@ -4,7 +4,7 @@ extends Node2D
 @onready var camera: Camera2D = $screen2/camera
 #@onready var game: Game = $screen2/game
 @onready var menu = $UI/menu
-@onready var serverbrowser = $UI/ServerBrowser
+#@onready var serverbrowser = $UI/ServerBrowser
 @onready var modlist = $UI/ModList
 
 var map: Node2D
@@ -40,7 +40,7 @@ func _ready():
 	
 	$UI/menu/mbtns/quitbtn.connect("pressed", get_tree().quit)
 	
-	if Global.is_mobile:
+	if Global.is_mobile or OS.get_name() == "Web":
 		$UI/menu/mbtns/quitbtn.visible = false
 	
 	$UI/ToolsMenu.connect("id_pressed", handle_tool_menu)
@@ -107,7 +107,7 @@ func _ready():
 	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.EYES, randi_range(0,8))
 	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.MOUTH, randi_range(0,8))
 	
-	var sk = Global.player_skins[Global.client_info["skin"]]["skin"]
+	var sk = Global.get_skin_by_name(Global.client_info["skin"])
 	var hattex = GameData.player_hats[Global.client_info["hat"]]
 	$screen1/Control/menu_player.set_skin(sk)
 	#$screen1/Control/other_player.set_skin(sk)
@@ -229,38 +229,43 @@ func _singleplayer_pressed():
 	Global.change_scene_file("res://scenes/game.tscn")
 
 func _host_pressed():
-	print("[Game] Hosting the server")
+	#print("[Game] Hosting the server")
 	
-	Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_HOST
+	#Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_HOST
 	
-	Global.change_scene_file("res://scenes/game.tscn")
+	#Global.change_scene_file("res://scenes/game.tscn")
+	
+	Global.change_scene_file("res://scenes/submenu/host_game.tscn")
 
 func _join_pressed():
 	#Global.net_mode = Global.GAME_TYPE.MULTIPLAYER_CLIENT
 	
 	#Global.change_scene_file("res://scenes/game.tscn")
-	serverbrowser.visible = not serverbrowser.visible
 	
-	if serverbrowser.visible:
-		spbtn.visible = false
-		hostbtn.visible = false
-		if Global.is_lua_enabled:
-			modsbtn.visible = false
-		joinbtn.text = tr("Back")
+	#serverbrowser.visible = not serverbrowser.visible
+	
+	#if serverbrowser.visible:
+	#	spbtn.visible = false
+	#	hostbtn.visible = false
+	#	if Global.is_lua_enabled:
+	#		modsbtn.visible = false
+	#	joinbtn.text = tr("Back")
 		
 		#if Global.is_mobile:
 		#	$UI/menu/mobilebtns.alignment = $UI/menu/mobilebtns.ALIGNMENT_BEGIN
 		#	$UI/StartLogo.visible = false
-	else:
-		spbtn.visible = true
-		hostbtn.visible = true
-		if Global.is_lua_enabled:
-			modsbtn.visible = true
-		joinbtn.text = tr("Join Game")
+	#else:
+	#	spbtn.visible = true
+	#	hostbtn.visible = true
+	#	if Global.is_lua_enabled:
+	#		modsbtn.visible = true
+	#	joinbtn.text = tr("Join Game")
 		
 		#if Global.is_mobile:
 		#	$UI/menu/mobilebtns.alignment = $UI/menu/mobilebtns.ALIGNMENT_CENTER
 		#	$UI/StartLogo.visible = true
+	
+	Global.change_scene_file("res://scenes/submenu/join_game.tscn")
 
 func _mods_pressed():
 	modlist.visible = not modlist.visible

@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scenes/objects/InteractableObject.gd" id="1_pi4s5"]
 [ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="2_pdq7x"]
 [ext_resource type="Texture2D" uid="uid://dcx05njwsiixq" path="res://assets/sprites/action_icons1.png" id="3_5xs1l"]
-[ext_resource type="AudioStream" uid="uid://d3fvfma21hyby" path="res://assets/sounds/space shield sounds - 7.wav" id="4_6x38x"]
+[ext_resource type="AudioStream" uid="uid://s0rojqrf5mt6" path="res://assets/sounds/ledge2.ogg" id="4_bqwj0"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_f1s2t"]
 radius = 55.2268
 
-[node name="Interactable" type="Node2D"]
+[node name="Interactable" type="Node2D" groups=["Interactable"]]
 script = ExtResource("1_pi4s5")
 
 [node name="sprite" type="Sprite2D" parent="."]
@@ -21,9 +21,11 @@ texture = ExtResource("2_pdq7x")
 shape = SubResource("CircleShape2D_f1s2t")
 
 [node name="touch_hint" type="Sprite2D" parent="."]
+self_modulate = Color(1, 1, 1, 0.494118)
 texture_filter = 1
 position = Vector2(0, -64)
 texture = ExtResource("3_5xs1l")
 
 [node name="used" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("4_6x38x")
+stream = ExtResource("4_bqwj0")
+pitch_scale = 1.7

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://d146f4nvtxkbc"]
+[gd_scene load_steps=16 format=3 uid="uid://d146f4nvtxkbc"]
 
 [ext_resource type="Script" path="res://scenes/game.gd" id="1_cppsc"]
 [ext_resource type="PackedScene" uid="uid://dmr0fcamx7t56" path="res://joystick/virtual_joystick.tscn" id="2_mvfe1"]
@@ -13,6 +13,10 @@
 [ext_resource type="AudioStream" uid="uid://cfh5136glfe3t" path="res://assets/sounds/space shield sounds - 5.wav" id="10_mwt1k"]
 [ext_resource type="AudioStream" uid="uid://bweypitflmlms" path="res://assets/sounds/space shield sounds - 9.wav" id="11_vhal8"]
 
+[sub_resource type="LabelSettings" id="LabelSettings_5f05c"]
+outline_size = 5
+outline_color = Color(0, 0, 0, 1)
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2hoyb"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_4gotb"]
@@ -25,6 +29,9 @@ properties/1/replication_mode = 1
 properties/2/path = NodePath(".:is_custom_skins_allowed")
 properties/2/spawn = true
 properties/2/replication_mode = 1
+properties/3/path = NodePath(".:game_state")
+properties/3/spawn = true
+properties/3/replication_mode = 2
 
 [node name="game" type="Node2D"]
 process_mode = 3
@@ -57,6 +64,7 @@ anchor_bottom = 1.0
 offset_top = -23.0
 grow_horizontal = 2
 grow_vertical = 0
+label_settings = SubResource("LabelSettings_5f05c")
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -76,6 +84,7 @@ grow_vertical = 0
 text = "Start"
 
 [node name="Virtual Joystick" parent="hud" instance=ExtResource("2_mvfe1")]
+process_mode = 1
 offset_left = 12.0
 offset_top = -334.0
 offset_right = 312.0
@@ -124,9 +133,12 @@ can_animate = false
 can_have_authority = false
 
 [node name="role_text" type="Label" parent="hud/role_reveal"]
-layout_mode = 0
-offset_right = 1149.0
-offset_bottom = 143.0
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 82.0
+offset_bottom = 151.0
+grow_horizontal = 2
 theme_override_font_sizes/font_size = 50
 text = "Impostor"
 horizontal_alignment = 1
@@ -266,8 +278,13 @@ spawn_path = NodePath("../players")
 stream = ExtResource("8_lo2ue")
 pitch_scale = 2.0
 
+[node name="chat_new_reading" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_lo2ue")
+volume_db = -2.0
+pitch_scale = 3.0
+
 [node name="announce_timer" type="Timer" parent="."]
-wait_time = 3.0
+wait_time = 5.0
 
 [node name="GameState" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_4gotb")
@@ -275,5 +292,15 @@ replication_config = SubResource("SceneReplicationConfig_4gotb")
 [node name="dediserver_timer" type="Timer" parent="."]
 process_mode = 1
 wait_time = 20.0
+
+[node name="ms_requests" type="Node" parent="."]
+
+[node name="ListRequest" type="HTTPRequest" parent="ms_requests"]
+use_threads = true
+timeout = 3.0
+
+[node name="UpdateRequest" type="HTTPRequest" parent="ms_requests"]
+use_threads = true
+timeout = 3.0
 
 [editable path="hud/Virtual Joystick"]

@@ -40,7 +40,7 @@ RpcClient="*res://assets/scripts/RPCClient.gd"
 
 multirun/number_of_windows=2
 multirun/add_custom_args=true
-multirun/window_args=["--server", "--connect"]
+multirun/window_args=["--server --no-data --username Host", "--connect --no-data --username Client"]
 
 [display]
 

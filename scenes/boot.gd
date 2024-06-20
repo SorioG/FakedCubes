@@ -18,11 +18,18 @@ func _ready():
 		
 		await get_tree().process_frame
 		
-		LoadingScreen.loadlabel.text = tr("Loading User Data")
-		print(tr("Loading User Data"))
-		Global.load_user_config()
-		
-		Global.can_save_config = true
+		if not ("--no-data" in OS.get_cmdline_args()):
+			LoadingScreen.loadlabel.text = tr("Loading User Data")
+			print(tr("Loading User Data"))
+			Global.load_user_config()
+			
+			Global.can_save_config = true
+		else:
+			# If user data is disabled, generate a uuid to prevent the player from getting kicked.
+			# This is good for debugging a multiplayer game.
+			# However, this might be used to evade the ban, which we won't tolerate.
+			if OS.is_debug_build():
+				Global.client_info["uuid"] = Global.uuid.v4()
 		
 		await get_tree().process_frame
 	
@@ -45,14 +52,15 @@ func _ready():
 	if not Global.is_dedicated_server:
 		print("Faked Cubes - version: " + Global.version)
 	
+	if handle_arguments():
+		return
+	
 	if Global.is_dedicated_server:
 		# If launched through dedicated server, it will automatically host a server.
 		# This will be also used if "--dediserver" was included as a argument (only works on debug build)
 		
 		# Of Course, we need to load server configuration.
 		Global.load_server_config()
-		
-		handle_arguments()
 		
 		print(" ")
 		print("---- Faked Cubes Dedicated Server ----")
@@ -83,11 +91,10 @@ func _ready():
 		Global.change_scene_file.call_deferred("res://scenes/game.tscn")
 	
 	else:
-		if not handle_arguments():
-			Global.change_scene_file.call_deferred("res://scenes/menu_screen.tscn")
+		Global.change_scene_file.call_deferred("res://scenes/menu_screen.tscn")
 
 func handle_arguments() -> bool:
-	var _i = 0
+	var i = 0
 	var args = OS.get_cmdline_args()
 	var handled = false
 	for arg in args:
@@ -99,6 +106,9 @@ func handle_arguments() -> bool:
 			#print("Record Mode enabled - Recommended to use godot's built-in recorder or any other recording software")
 			Global.hide_menu = true
 		
-		_i += 1
+		if arg == "--username":
+			Global.client_info["username"] = args[i+1]
+		
+		i += 1
 	
 	return handled

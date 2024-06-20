@@ -69,6 +69,7 @@ var server_info: Dictionary = {
 	"name": "Server", # Name of the server
 	"port": Global.server_port, # Server Port
 	"version": Global.version, # Version used by the server, disconnects clients that don't have it
+	"dedicated": false, # Whatever or not this server is a dedicated server
 	"gamemode": "Classic", # Name of the gamemode
 	"players": 0, # Number of players connected (excluding bots)
 	"bots": 0, # Number of the bots used
@@ -98,6 +99,18 @@ var custom_lobby_path: String = ""
 
 var has_connected := true
 
+var is_server_public := false
+
+var masterserver_success := false
+
+var lobby_client: WebSocketPeer
+
+var webrtc_peers := {}
+
+var webrtc_lobby_id := ""
+
+var webrtc_mp_peer: WebRTCMultiplayerPeer
+
 signal local_player_used_action(action: int)
 signal game_ended
 
@@ -115,6 +128,9 @@ func spawn_player(is_local: bool, plr_name: String = "Player", is_new: bool = tr
 	
 	if is_new:
 		plr.animation.play("appear")
+	
+	if is_bot:
+		plr.can_have_authority = false
 	
 	if is_local and is_split_screen:
 		plr.action_prefix = "p{0}_".format([split_screen_player])
@@ -152,6 +168,9 @@ func _ready():
 	
 	$hud/vc_enable.visible = is_voice_chat_allowed
 	
+	$ms_requests/ListRequest.connect("request_completed", _on_masterserver_response)
+	$ms_requests/UpdateRequest.connect("request_completed", _on_masterserver_response)
+	
 	# Generate a server UUID for public server list and discord invites.
 	server_info["uuid"] = Global.uuid.v4()
 	
@@ -170,8 +189,20 @@ func _ready():
 		is_voice_chat_allowed = false
 	
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
-		var peer = ENetMultiplayerPeer.new()
-		var err = peer.create_server(Global.server_port, Global.MAX_PLAYERS)
+		var err = OK
+		var peer: MultiplayerPeer
+		if Global.net_type == Global.NET_TYPE.DIRECT:
+			peer = ENetMultiplayerPeer.new()
+			err = peer.create_server(Global.server_port, Global.MAX_PLAYERS)
+		elif Global.net_type == Global.NET_TYPE.WEBRTC:
+			peer = WebRTCMultiplayerPeer.new()
+			webrtc_mp_peer = peer
+			webrtc_lobby_id = "invalid"
+			err = peer.create_server()
+		else:
+			err = ERR_INVALID_PARAMETER
+		
+		is_server_public = Global.cubenet_is_public
 		
 		if err != OK:
 			Global.alert("Failed to start the server, is the port open?", "Server Error")
@@ -186,6 +217,12 @@ func _ready():
 		multiplayer.multiplayer_peer = peer
 		
 		change_to_lobby()
+		
+		server_info["dedicated"] = Global.is_dedicated_server
+		
+		if Global.net_type == Global.NET_TYPE.WEBRTC:
+			lobby_client = WebSocketPeer.new()
+			lobby_client.connect_to_url(Global.cubenet_get_websocket() + "/lobby")
 		
 		#net_spawn_player.rpc(multiplayer.get_unique_id())
 		
@@ -209,21 +246,42 @@ func _ready():
 		
 		handle_arguments()
 		
+		Global.start_server_thread()
+		
 		_update_server_info()
+		
+		if is_server_public:
+			_list_public()
 	
 	elif net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		var peer: MultiplayerPeer
 		has_connected = false
 		$hud/lobby_ui/StartButton.visible = false
 		
-		print("Connecting to " + Global.server_ip + ":" + str(Global.server_port))
 		
 		#LoadingScreen.music.play()
 		LoadingScreen.show_screen()
 		LoadingScreen.loadlabel.text = tr("Connecting to the server...")
 		
-		var peer = ENetMultiplayerPeer.new()
-		peer.create_client(Global.server_ip, Global.server_port)
-		multiplayer.multiplayer_peer = peer
+		if Global.net_type == Global.NET_TYPE.DIRECT:
+			print("Connecting to " + Global.server_ip + ":" + str(Global.server_port))
+			
+			peer = ENetMultiplayerPeer.new()
+			peer.create_client(Global.server_ip, Global.server_port)
+			
+			multiplayer.multiplayer_peer = peer
+		elif Global.net_type == Global.NET_TYPE.WEBRTC:
+			peer = WebRTCMultiplayerPeer.new()
+			
+			lobby_client = WebSocketPeer.new()
+			lobby_client.connect_to_url(Global.cubenet_get_websocket() + "/lobby")
+			
+		else:
+			Global.alert("Invalid Network Type", "Connection Failed")
+			
+			_leave_game()
+		
+		
 	
 	$hud/lobby_ui/StartButton.connect("pressed", _on_start_pressed)
 	
@@ -297,11 +355,15 @@ func parse_server_config():
 	num_bots = config.get_value("Game", "max_bots", 0)
 	
 	var lobby_map = config.get_value("Game", "lobby_map", "default")
+	var s_gamemode = config.get_value("Game", "gamemode", 0)
 	
 	if lobby_map != "default":
 		custom_lobby_path = Global.maps_path.path_join(lobby_map + ".tscn")
 		
 		change_to_lobby()
+	
+	current_gamemode = Global.game_modes[s_gamemode]
+	gamemode_idx = s_gamemode
 
 func change_to_lobby():
 	if custom_lobby_path.is_empty():
@@ -333,13 +395,18 @@ func _new_message(_user: String, _msg: String):
 	if not chat_window.visible:
 		$hud/chat.modulate = Color.WHITE
 		$chat_new.play()
+	else:
+		$chat_new_reading.play()
 
 @rpc("any_peer", "call_local", "reliable")
 func net_user_message(msg: String):
 	var id = multiplayer.get_remote_sender_id()
 	var player: Player = players_node.get_node_or_null("Player" + str(id))
 	if player:
-		chat_window.add_message(player.player_name, msg)
+		if not Global.is_dedicated_server:
+			var avatar = ImageTexture.create_from_image(player.get_still_image())
+			
+			chat_window.add_message(player.player_name, msg, avatar)
 		
 		print("[Chat] " + player.player_name + ": " + msg)
 	else:
@@ -377,9 +444,8 @@ func _on_peer_joined(id: int):
 		
 		local_player.net_set_hat.rpc_id(id, local_player.hat_name)
 	
-	ModLoader.call_hook("client_connected", [id])
-
-
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("client_connected", [id])
 
 func _on_peer_left(id: int):
 	var player = players_node.get_node_or_null("Player" + str(id))
@@ -395,7 +461,8 @@ func _on_peer_left(id: int):
 	else:
 		print("[Server] Player " + str(id) + " disconnected")
 	
-	ModLoader.call_hook("client_disconnected", [id])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("client_disconnected", [id])
 
 func bot_spawn():
 	var size = bot_players.size()
@@ -427,6 +494,12 @@ func net_bot_spawn(nam: String):
 	
 	emit_signal("player_spawned", player)
 	
+	if multiplayer.is_server():
+		player.position = get_random_spawn().position
+		
+		if game_state == STATE.INGAME:
+			gamemode_node.player_join_early(player)
+	
 	bot_players.push_back(player)
 	
 	return player
@@ -443,23 +516,34 @@ func get_local_ip():
 	return "127.0.0.1"
 
 func _process(_delta):
+	
 	bottominfo.text = "Gamemode: " + current_gamemode["name"]
 	bottominfo.text += " | "
 	
 	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
 		bottominfo.text += "Singleplayer"
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
-		bottominfo.text += get_local_ip() + ":" + str(Global.server_port)
+		if Global.net_type == Global.NET_TYPE.DIRECT:
+			bottominfo.text += get_local_ip() + ":" + str(Global.server_port)
+		elif Global.net_type == Global.NET_TYPE.WEBRTC:
+			if webrtc_lobby_id == "invalid":
+				bottominfo.text += "<Waiting for signaling server>"
+			else:
+				bottominfo.text += "Lobby ID: " + webrtc_lobby_id
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
-		bottominfo.text += Global.server_ip + ":" + str(Global.server_port)
+		if Global.net_type == Global.NET_TYPE.DIRECT:
+			bottominfo.text += Global.server_ip + ":" + str(Global.server_port)
+		elif Global.net_type == Global.NET_TYPE.WEBRTC:
+			bottominfo.text += "Lobby ID: " + webrtc_lobby_id
 	
 	if local_player:
-		update_players()
+		if not get_tree().paused:
+			update_players()
 		
 		if Input.is_action_just_pressed("menu") and not pause_win.visible:
 			_pause_pressed()
 	
-	if game_state == STATE.INGAME:
+	if game_state == STATE.INGAME and not get_tree().paused:
 		gamemode_node.game_tick()
 		
 		if multiplayer.is_server():
@@ -477,7 +561,34 @@ func _process(_delta):
 	
 	$hud/vc_enable.visible = is_voice_chat_allowed
 	
-	ModLoader.call_hook("game_tick", [_delta])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("game_tick", [_delta])
+	
+	if lobby_client:
+		var state = lobby_client.get_ready_state()
+		lobby_client.poll()
+		
+		if state == WebSocketPeer.STATE_CONNECTING:
+			pass
+		elif state == WebSocketPeer.STATE_OPEN:
+			while lobby_client.get_available_packet_count():
+				var packet = lobby_client.get_packet()
+				var json = JSON.parse_string(packet.get_string_from_utf8())
+				
+				_lobby_client_handle_packet(json)
+		elif state == WebSocketPeer.STATE_CLOSING:
+			pass
+		elif state == WebSocketPeer.STATE_CLOSED:
+			if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
+				Global.alert("You have been disconnected from the signaling server, you will no longer receive new connections", "WebRTC Error")
+				
+			else:
+				if not has_connected:
+					Global.alert("Failed to connect to signaling server (failed to join lobby)", "WebRTC Error")
+					
+					_leave_game()
+			
+			lobby_client = null
 
 @rpc("authority", "call_local", "reliable")
 func change_map(m: String):
@@ -502,7 +613,8 @@ func change_map(m: String):
 	
 	move_players()
 	
-	ModLoader.call_hook("map_changed", [m, old_name])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("map_changed", [m, old_name])
 
 func get_random_spawn():
 	return current_map.get_node("spawns").get_children().pick_random()
@@ -549,6 +661,9 @@ func net_spawn_player(id):
 	
 	if multiplayer.is_server():
 		player.position = get_random_spawn().position
+		
+		if game_state == STATE.INGAME:
+			gamemode_node.player_join_early(player)
 	
 	return player
 
@@ -560,7 +675,8 @@ func _change_map(map: String):
 	#if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
 	#	change_map(map)
 	#if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
-	change_map.rpc(map)
+	if multiplayer.is_server():
+		change_map.rpc(map)
 
 func can_start_game() -> String:
 	return gamemode_node.can_start_game()
@@ -584,12 +700,13 @@ func _on_start_pressed():
 	
 	game_state = STATE.INGAME
 	
-	ModLoader.call_hook("game_started", [])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("game_started", [])
 	
-	if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST and multiplayer.is_server():
-		multiplayer.multiplayer_peer.refuse_new_connections = true
-		
-		print("[Server] This server is now refusing connections.")
+	#if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST and multiplayer.is_server():
+	#	multiplayer.multiplayer_peer.refuse_new_connections = true
+	#	
+	#	print("[Server] This server is now refusing connections.")
 	
 	if is_using_custom_map and can_change_map:
 		load_custom_map(custom_map_path)
@@ -619,8 +736,6 @@ func get_players(exclude_bots: bool = false) -> Array[Player]:
 			res.append(plr)
 	
 	return res
-
-
 
 func get_players_by_role(role: int) -> Array[Player]:
 	var res: Array[Player] = []
@@ -657,7 +772,8 @@ func end_game():
 	game_state = STATE.LOBBY
 	$hud/lobby_ui.visible = true
 	
-	ModLoader.call_hook("game_ended", [winning_role])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("game_ended", [winning_role])
 	
 	if Global.is_dedicated_server:
 		$dediserver_timer.start()
@@ -668,9 +784,9 @@ func end_game():
 	
 	if multiplayer.is_server():
 		net_end_game.rpc(winning_role)
-		multiplayer.multiplayer_peer.refuse_new_connections = false
+	#	multiplayer.multiplayer_peer.refuse_new_connections = false
 		
-		print("[Server] This server is now accepting connections.")
+	#	print("[Server] This server is now accepting connections.")
 	
 	emit_signal("game_ended")
 
@@ -680,12 +796,13 @@ func check_end_game() -> int:
 func show_results():
 	if not local_player: return
 	$hud/role_reveal.visible = true
-	$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin()) # Try to match player's skin
+	$hud/role_reveal/hide_timer.start()
 	$hud/role_reveal/role_player.animation.play("idle")
 	
 	gamemode_node.show_results($hud/role_reveal/role_text, $hud/role_reveal/role_player)
 	
-	$hud/role_reveal/hide_timer.start()
+	$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin())
+	
 
 func get_alive_players() -> Array[Player]:
 	var res: Array[Player] = []
@@ -730,11 +847,14 @@ func reset_player(plr: Player, reset_role: bool = true):
 	
 	plr.animation.play("RESET")
 	plr.is_idle = false
+	plr.is_ghost = false
+	plr.visible = true
 	
 	if multiplayer.is_server():
 		plr.net_reset_player.rpc(reset_role)
 	
-	ModLoader.call_hook("player_reset", [plr, reset_role])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("player_reset", [plr, reset_role])
 
 func _impostor_timer_end():
 	$hud/role_reveal.visible = false
@@ -775,6 +895,9 @@ func _lan_announce():
 	#if err != OK:
 	#	print("[Server] Failed to announce the server to LAN")
 	#	$announce_timer.stop()
+	
+	if masterserver_success:
+		_update_public()
 
 func _update_server_info():
 	server_info["gamemode"] = current_gamemode["name"]
@@ -804,6 +927,10 @@ func _on_connected():
 	LoadingScreen.loadlabel.text = "Sending client information..."
 	
 	net_client_info.rpc_id(1, Global.client_info)
+
+func _exit_tree():
+	if lobby_client is WebSocketPeer and lobby_client.get_ready_state() == WebSocketPeer.STATE_OPEN:
+		lobby_client.close()
 
 @rpc("call_remote", "reliable")
 func net_end_game(winner: int):
@@ -908,16 +1035,24 @@ func net_client_info(info: Dictionary):
 		err_msg = "The username must not be empty"
 		can_join = false
 	
-	# TODO: Check for the valid UUID before joining
 	if uuid.is_empty() and can_join:
 		err_msg = "Empty UUID - Possible ban evading or cheating"
 		can_join = false
 	
-	if is_uuid_banned(uuid):
+	# This client has a invalid uuid, don't trust it!
+	if not Global.is_uuid_valid(uuid) and can_join:
+		err_msg = "Invalid UUID - Did you modify your UUID?"
+		can_join = false
+		
+		print("[WARN] Player " + str(id) + " has attempted to join with a invalid UUID!")
+	
+	if is_uuid_banned(uuid) and can_join:
 		var reason = get_ban_reason(uuid)
 		
 		err_msg = "You have been banned from this server (reason: " + reason + ")"
 		can_join = false
+		
+		print("[WARN] Player " + str(id) + " tried to join, but their UUID is banned")
 	
 	# If this server is modded, we can check whatever or not this client has some mods enabled.
 	if ModLoader.required_mods.size() > 0 and can_join:
@@ -938,7 +1073,8 @@ func net_client_info(info: Dictionary):
 				can_join = false
 	
 	# Let the mods handle it as well.
-	ModLoader.call_hook("handle_client_info", [info, err_msg, can_join])
+	if Global.is_lua_enabled:
+		ModLoader.call_hook("handle_client_info", [info, err_msg, can_join])
 	
 	if can_join:
 		print("[Game] " + username + " has joined the game (platform: " + platform + ", modded: " + str(modded) + ")")
@@ -950,10 +1086,10 @@ func net_client_info(info: Dictionary):
 		if username:
 			print("[Server] " + username + " failed to join the game")
 		else:
-			print("[Server] Player " + id + " failed to join the game")
+			print("[Server] Player " + str(id) + " failed to join the game")
 		
 		if OS.is_debug_build():
-			print_debug("[Debug] Player " + id + " has failed the info check, message: ", err_msg)
+			print_debug("[Debug] Player " + str(id) + " has failed the info check, message: ", err_msg)
 		
 		net_info_fail.rpc_id(id, err_msg)
 
@@ -997,6 +1133,48 @@ func get_ban_reason(uuid: String) -> String:
 	
 	return "not banned"
 
+func _update_public():
+	$ms_requests/UpdateRequest.request(
+		Global.cubenet_server_url + "/servers/update", 
+		Global.cubenet_headers + ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(server_info)
+	)
+
+func _list_public():
+	$ms_requests/ListRequest.request(
+		Global.cubenet_server_url + "/servers/list", 
+		Global.cubenet_headers + ["Content-Type: application/json"],
+		HTTPClient.METHOD_POST,
+		JSON.stringify(server_info)
+	)
+
+func _on_masterserver_response(_res: int, res_code: int, _headers: PackedStringArray, body: PackedByteArray):
+	if res_code == 200 || res_code == 400:
+		var json = JSON.parse_string(body.get_string_from_utf8())
+		var success = json["success"]
+		
+		if success:
+			if not masterserver_success:
+				masterserver_success = true
+				print("[CubeNet] Successfully registered this server to the list")
+		else:
+			if masterserver_success:
+				masterserver_success = false
+				print("[CubeNet] Failed to register/update the server to the list")
+				print("[CubeNet] Error: ", json["error"])
+				
+				if not Global.is_dedicated_server:
+					chat_window.add_message("CubeNet", "Failed to register/update this server to the list\n" + json["error"], load("res://assets/sprites/bigplayer.png"))
+		
+	else:
+		masterserver_success = false
+		
+		print("[CubeNet] Failed to register/update this server (server error)")
+		
+		if not Global.is_dedicated_server:
+			chat_window.add_message("CubeNet", "Failed to register/update this server to the list (server error)", load("res://assets/sprites/bigplayer.png"))
+
 # Something that's useful for mods
 func get_gamemode_name() -> String:
 	return current_gamemode["name"]
@@ -1019,3 +1197,223 @@ func send_player_message(msg: String):
 		net_server_message.rpc(msg)
 	else:
 		net_user_message.rpc(msg)
+# End of useful functions for mods
+
+func _handle_command(args: Array[String], cb: Callable):
+	if args[0] == "list":
+		var plist = str(get_players().size()) + " players online:\n"
+		for plr in get_players():
+			var pname = plr.player_name
+			
+			if not plr.is_bot:
+				pname += " (id: " + str(plr.net_id) + ")"
+			else:
+				pname += " (bot)"
+			
+			if plr.is_killed:
+				pname += " (dead)"
+			
+			if game_state == STATE.INGAME:
+				pname += " (role: " + str(plr.current_role) + ")"
+			
+			plist += pname + "\n"
+		
+		cb.call(plist)
+	
+	if args[0] == "gamemode":
+		if args.size() == 1:
+			cb.call("Current Gamemode is " + current_gamemode["name"])
+		else:
+			var nam = int(args[1])
+			
+			if game_state == STATE.INGAME:
+				cb.call("You can only change the gamemode while in the lobby")
+				return
+			
+			if nam > Global.game_modes.size()-1 or nam < 0:
+				cb.call("Invalid Gamemode, you can only set this to 0 to " + str(Global.game_modes.size()-1))
+			else:
+				current_gamemode = Global.game_modes[nam]
+				gamemode_idx = nam
+				
+				cb.call("Changed Gamemode to " + current_gamemode["name"])
+	
+	if args[0] == "bots":
+		if args.size() == 1:
+			cb.call("Current Bot Count is " + str(num_bots))
+		else:
+			num_bots = int(args[1])
+			
+			cb.call("Changing the bot count to " + str(num_bots))
+	
+	if args[0] == "start":
+		if game_state == STATE.INGAME:
+			cb.call("You can only start the game while in the lobby")
+			return
+		
+		_on_start_pressed()
+	
+	if args[0] == "help":
+		var clist = "List of commands:\n"
+		
+		clist += "list - Get a list of players online\n"
+		clist += "gamemode [index] - Change the gamemode, omit the index to get the current one\n"
+		clist += "bots [count] - Change or get the bot count\n"
+		clist += "start - Forcefully start the game\n"
+		clist += "quit - Closes the server\n"
+		
+		cb.call(clist)
+
+func _lobby_client_handle_packet(packet: Dictionary):
+	var ptype: String = packet["packet"]
+	var pdata: Dictionary = packet["data"]
+	
+	if not webrtc_mp_peer:
+		webrtc_mp_peer = WebRTCMultiplayerPeer.new()
+	
+	var mp_peer: WebRTCMultiplayerPeer = webrtc_mp_peer
+	
+	if OS.is_debug_build():
+		print("[Debug] [Lobby Client] Received packet type ", ptype)
+	
+	if ptype == "playerJoin":
+		# Someone has joined the game (host only)
+		var peerId = pdata["peerId"]
+		var peer := WebRTCPeerConnection.new()
+		webrtc_peers[str(peerId)] = peer
+		
+		peer.session_description_created.connect(_rtc_peer_desc_created.bind(peerId))
+		peer.ice_candidate_created.connect(_rtc_peer_ice_candidate.bind(peerId))
+		
+		peer.initialize({
+			"iceServers": Global.WEBRTC_ICE_SERVERS
+		})
+		
+		mp_peer.add_peer(peer, peerId)
+		
+		print("[Lobby Client] Peer " + str(peerId) + " has connected to the lobby")
+	
+	if ptype == "lobby":
+		if not pdata["isHost"]:
+			mp_peer.create_client(pdata["peerId"])
+			
+			multiplayer.multiplayer_peer = mp_peer
+			
+			var hostId = pdata["hostId"]
+			
+			var hostPeer := WebRTCPeerConnection.new()
+			webrtc_peers[str(hostId)] = hostPeer
+			
+			hostPeer.session_description_created.connect(_rtc_peer_desc_created.bind(hostId))
+			hostPeer.ice_candidate_created.connect(_rtc_peer_ice_candidate.bind(hostId))
+			
+			hostPeer.initialize({
+				"iceServers": Global.WEBRTC_ICE_SERVERS
+			})
+			
+			mp_peer.add_peer(hostPeer, 1)
+			
+			print("[Lobby Client] Creating a offer for the host")
+			
+			hostPeer.create_offer()
+			
+		
+		Global.server_ip = "webrtc:" + pdata["lobbyId"]
+		server_info["webrtc_lobby_id"] = pdata["lobbyId"]
+		webrtc_lobby_id = pdata["lobbyId"]
+		
+		print("[Lobby Client] Lobby ID: " + pdata["lobbyId"])
+		
+		if masterserver_success:
+			_update_public()
+	
+	if ptype == "offer" or ptype == "answer":
+		var peerId = pdata["fromId"]
+		var peer: WebRTCPeerConnection = webrtc_peers[str(peerId)]
+		
+		if not peer:
+			push_error("Cannot find peer with id ", peerId)
+			return
+		
+		peer.set_remote_description(pdata["type"], pdata["sdp"])
+		#mp_peer.add_peer(peer, peerId)
+		
+	
+	if ptype == "candidate":
+		var peerId = pdata["fromId"]
+		var peer: WebRTCPeerConnection = webrtc_peers[str(peerId)]
+		
+		if not peer:
+			push_error("Cannot find peer with id ", peerId)
+			return
+		
+		peer.add_ice_candidate(pdata["media"], pdata["index"], pdata["name"])
+	
+	if ptype == "error":
+		print("[Lobby Client] Error: " + pdata["msg"])
+		
+		if not Global.is_dedicated_server:
+			chat_window.add_message("CubeNet", "Lobby Client Error: " + pdata["msg"], load("res://assets/sprites/bigplayer.png"))
+	
+	if ptype == "hello":
+		_lobby_client_on_connect()
+
+func _rtc_peer_desc_created(type: String, sdp: String, id: int):
+	var pack = {
+		"packet": type,
+		"data": {
+			"type": type,
+			"sdp": sdp,
+			"targetId": id
+		}
+	}
+	
+	var peer: WebRTCPeerConnection = webrtc_peers[str(id)]
+	if not peer:
+		push_error("Cannot find peer with id ", id)
+		return
+	
+	peer.set_local_description(type, sdp)
+	lobby_client.send_text(JSON.stringify(pack))
+
+func _rtc_peer_ice_candidate(media: String, index: int, nam: String, id: int):
+	var pack = {
+		"packet": "candidate",
+		"data": {
+			"media": media,
+			"index": index,
+			"name": nam,
+			"targetId": id
+		}
+	}
+	
+	var peer: WebRTCPeerConnection = webrtc_peers[str(id)]
+	if not peer:
+		push_error("Cannot find peer with id ", id)
+		return
+	
+	lobby_client.send_text(JSON.stringify(pack))
+
+func _lobby_client_on_connect():
+	if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
+		var pack = {
+			"packet": "host",
+			"data": {}
+		}
+		
+		lobby_client.send_text(JSON.stringify(pack))
+	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		var pack = {
+			"packet": "join",
+			"data": {
+				"lobbyId": Global.server_ip
+			}
+		}
+		
+		lobby_client.send_text(JSON.stringify(pack))
+
+## Whatever or not the player is allowed to control their character
+## The false value means that the player will play the thinking animation for all players
+func can_control_player() -> bool:
+	if $hud/ChatWindow.visible: return false
+	return true

@@ -51,6 +51,18 @@ func _ready():
 	
 	$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom/openskins.connect("pressed", _skin_directory_open)
 	$gameinfo/tabs/Game/btns/cmaplobby.connect("pressed", _custom_map_lobby)
+	
+	$accused_voting/box/btns/yesbtn.connect("pressed", _vote_button.bind(true))
+	$accused_voting/box/btns/nobtn.connect("pressed", _vote_button.bind(false))
+
+func _vote_button(is_yes: bool):
+	$select.play()
+	$accused_voting/box/btns.visible = false
+	
+	game.custom_rpc.rpc({
+		"type": "vote",
+		"is_yes": is_yes
+	})
 
 func setup_skins():
 	var skins = Global.player_skins
@@ -197,6 +209,9 @@ func _process(_delta):
 		is_starting = (game.game_state == game.STATE.INGAME)
 		
 		$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom.visible = game.is_custom_skins_allowed
+		
+		if OS.get_name() == "Web":
+			$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom.visible = false
 	else:
 		is_starting = false
 	
@@ -212,6 +227,9 @@ func _process(_delta):
 		#	actions.get_node("btn2").visible = (player.current_role == Global.PLAYER_ROLE.IMPOSTOR)
 		if game:
 			game.gamemode_node.update_actions(actions.get_node("btn1"),actions.get_node("btn2"),actions.get_node("btn3"),actions.get_node("btn4"))
+		
+		if gameinfo.visible:
+			gameinfo.hide()
 
 func _opened_window():
 	pass
@@ -236,3 +254,34 @@ func _custom_map_lobby():
 		game.custom_lobby_path = Global.custom_maps[map_options.get_item_text(idx)]
 	
 	game.change_to_lobby()
+
+func set_pickplayer_list(exclude_self: bool = false, hide_dead: bool = false):
+	var list: GridContainer = $pickplayer/panel/scroll/list
+	
+	for i in list.get_children():
+		i.queue_free()
+	
+	for p in game.get_players():
+		if p == player and exclude_self: continue
+		
+		var btn = Button.new()
+		
+		btn.name = p.name
+		btn.text = p.player_name
+		
+		btn.icon = ImageTexture.create_from_image(p.get_still_image())
+		
+		list.add_child(btn)
+		
+		if hide_dead:
+			btn.disabled = p.is_killed
+		
+		btn.connect("pressed", _handle_picked.bind(p, player.hud_pickplayer_tag))
+		btn.connect("pressed", $pickplayer.hide)
+		btn.connect("pressed", $select.play)
+
+func _handle_picked(plr: Player, tag: String):
+	#player.emit_signal("hud_player_picked", plr, tag)
+	#game.gamemode_node.hud_picked_player(plr, tag, self)
+	
+	player.net_picked_player.rpc(plr.name, tag)

@@ -1,0 +1,123 @@
+[gd_scene load_steps=3 format=3 uid="uid://btpbjeoube7n4"]
+
+[ext_resource type="Script" path="res://scenes/submenu/host_game.gd" id="1_sj6h1"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_qygdx"]
+font_size = 24
+outline_size = 5
+outline_color = Color(0, 0, 0, 1)
+
+[node name="HostGame" type="Node2D"]
+script = ExtResource("1_sj6h1")
+
+[node name="bg" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ColorRect" type="ColorRect" parent="bg"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.17881, 0.17881, 0.17881, 1)
+metadata/_edit_use_anchors_ = true
+
+[node name="ui" type="CanvasLayer" parent="."]
+
+[node name="title" type="Label" parent="ui"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 45.0
+grow_horizontal = 2
+text = "Host Game"
+label_settings = SubResource("LabelSettings_qygdx")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="backbtn" type="Button" parent="ui"]
+offset_left = 21.0
+offset_top = 9.0
+offset_right = 128.0
+offset_bottom = 41.0
+text = "Back"
+
+[node name="panel" type="PanelContainer" parent="ui"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 59.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="box" type="VBoxContainer" parent="ui/panel"]
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+
+[node name="servname" type="HBoxContainer" parent="ui/panel/box"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ui/panel/box/servname"]
+layout_mode = 2
+text = "Server Name:"
+
+[node name="value" type="LineEdit" parent="ui/panel/box/servname"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+tooltip_text = "Name of the server to use when hosting, this will be shown in server list, rich presence."
+alignment = 1
+
+[node name="servport" type="HBoxContainer" parent="ui/panel/box"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ui/panel/box/servport"]
+layout_mode = 2
+text = "Server Port:"
+horizontal_alignment = 1
+
+[node name="value" type="SpinBox" parent="ui/panel/box/servport"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+min_value = 1024.0
+max_value = 65535.0
+value = 7230.0
+allow_greater = true
+alignment = 1
+
+[node name="nettype" type="HBoxContainer" parent="ui/panel/box"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ui/panel/box/nettype"]
+layout_mode = 2
+text = "Network Type:"
+
+[node name="value" type="OptionButton" parent="ui/panel/box/nettype"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+tooltip_text = "The network type to use when hosting.
+Direct: Can be used to connect via IP, Discord Invites and hosting a public server requires port forwarding
+WebRTC: Can be used to connect via Lobby ID, note that some players may not connect properly"
+alignment = 1
+item_count = 2
+selected = 0
+popup/item_0/text = "Direct"
+popup/item_0/id = 0
+popup/item_1/text = "WebRTC"
+popup/item_1/id = 1
+
+[node name="public" type="CheckBox" parent="ui/panel/box"]
+layout_mode = 2
+tooltip_text = "Whatever or not to make this server public, this will request CubeNet to list your server.
+This will not work when CubeNet Instance is empty."
+text = "Public Server"
+flat = true
+alignment = 1
+
+[node name="hostbtn" type="Button" parent="ui/panel/box"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Host Server"

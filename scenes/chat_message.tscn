@@ -22,12 +22,14 @@ shadow_size = 3
 shadow_color = Color(0, 0, 0, 0.321569)
 
 [node name="ChatMessage" type="Control"]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_stretch_ratio = 2.0
 
 [node name="panel" type="PanelContainer" parent="."]
 custom_minimum_size = Vector2(0, 100)
@@ -38,22 +40,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_jkwyv")
+metadata/_edit_use_anchors_ = true
 
 [node name="box" type="HBoxContainer" parent="panel"]
 layout_mode = 2
+size_flags_stretch_ratio = 2.0
 
 [node name="avatar" type="TextureRect" parent="panel/box"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 texture = ExtResource("1_kn3w8")
 expand_mode = 1
-stretch_mode = 3
+stretch_mode = 5
 
 [node name="info" type="VBoxContainer" parent="panel/box"]
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="username" type="Label" parent="panel/box/info"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 auto_translate = false
 localize_numeral_system = false
@@ -62,9 +67,11 @@ label_settings = SubResource("LabelSettings_mefdl")
 vertical_alignment = 1
 
 [node name="message" type="Label" parent="panel/box/info"]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
 auto_translate = false
 localize_numeral_system = false
 text = "Am i stupid?"
 label_settings = SubResource("LabelSettings_dw2my")
+autowrap_mode = 1

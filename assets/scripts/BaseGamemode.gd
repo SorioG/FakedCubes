@@ -1,7 +1,6 @@
+## Base Class for all of the gamemodes
 extends Node
 class_name BaseGamemode
-
-# Base Class for all of the gamemodes
 
 var game: Game
 @export var can_reveal_role: bool = false
@@ -58,4 +57,7 @@ func network_load(_data: Dictionary):
 	pass
 
 func receive_custom_rpc(_data: Dictionary, _id: int):
+	pass
+
+func hud_picked_player(_plr: Player, _tag: String, _picker: Player):
 	pass
