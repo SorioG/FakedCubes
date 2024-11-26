@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjkknw5oufmx"
-path="res://.godot/imported/player-manface.png-be94f4ab78f87ab0badbc7ebf6f68446.ctex"
+uid="uid://bm30au8mjfc2f"
+path="res://.godot/imported/joystick_base_outline.png-7a6697329406f0bdcf700bd4b603af9d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/player-manface.png"
-dest_files=["res://.godot/imported/player-manface.png-be94f4ab78f87ab0badbc7ebf6f68446.ctex"]
+source_file="res://scenes/joystick/textures/joystick_base_outline.png"
+dest_files=["res://.godot/imported/joystick_base_outline.png-7a6697329406f0bdcf700bd4b603af9d.ctex"]
 
 [params]
 

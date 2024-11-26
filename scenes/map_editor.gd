@@ -238,13 +238,13 @@ func playtest():
 		$objects.visible = true
 	else:
 		if get_tree().get_nodes_in_group("Spawn").size() < 1:
-			Global.alert("This map must have player spawns before playtesting")
+			Global.alert(tr("This map must have player spawns before playtesting"))
 			return
 		
 		var scene := get_packed_scene()
 		
 		if scene == null:
-			Global.alert("Cannot playtest the map.")
+			Global.alert(tr("Cannot playtest the map."))
 			return
 		
 		var game = Global.GAME_NODE.instantiate()
@@ -307,7 +307,7 @@ func _player_spawned_signal(_plr: Player):
 	pass
 
 func _game_ended():
-	Global.alert("This gamemode has now ended.")
+	Global.alert(tr("This gamemode has now ended."))
 	
 	playtest()
 
@@ -349,7 +349,7 @@ func save_map(path: String):
 	var err = writer.open(path)
 	
 	if err != OK:
-		Global.alert("Failed to save map")
+		Global.alert(tr("Failed to save map"))
 		return
 	
 	var mapdata = JSON.stringify(get_map_json())
@@ -389,7 +389,7 @@ func save_map(path: String):
 	
 	writer.close()
 	
-	Global.alert("Successfully saved map to file")
+	Global.alert(tr("Successfully saved map to file"))
 
 func load_map(path: String):
 	var reader := ZIPReader.new()
@@ -397,25 +397,25 @@ func load_map(path: String):
 	var err = reader.open(path)
 	
 	if err != OK:
-		Global.alert("Failed to load map: Invalid .fcmap file")
+		Global.alert(tr("Failed to load map: Invalid .fcmap file"))
 		return
 	
 	if not (reader.file_exists("version.txt") and reader.file_exists("map.json")):
-		Global.alert("Failed to load map: Invalid .fcmap file")
+		Global.alert(tr("Failed to load map: Invalid .fcmap file"))
 		return
 	
 	
 	var mapversion := reader.read_file("version.txt").get_string_from_utf8()
 	
 	if mapversion != Global.version:
-		Global.alert("Failed to load map: Version mismatch (" + mapversion + ")")
+		Global.alert(tr("Failed to load map: Version mismatch (current one is {0})").format([mapversion]))
 		reader.close()
 		return
 	
 	#var progress: float = 0
 	
 	LoadingScreen.show_screen()
-	LoadingScreen.loadlabel.text = "Loading Map..."
+	LoadingScreen.loadlabel.text = tr("Loading Map...")
 	LoadingScreen.set_progress(0)
 	
 	var mapdata := reader.read_file("map.json")
@@ -423,7 +423,7 @@ func load_map(path: String):
 	
 	load_map_json(mapjson)
 	
-	LoadingScreen.loadlabel.text = "Adding Objects..."
+	LoadingScreen.loadlabel.text = tr("Adding Objects...")
 	LoadingScreen.set_progress(50)
 	
 	var objdata := reader.read_file("objects.json")
@@ -549,20 +549,20 @@ func setup_gamemodes():
 func export_to_scene(path: String):
 	
 	if get_tree().get_nodes_in_group("Spawn").size() < 1:
-		Global.alert("This map must have player spawns before exporting to a scene")
+		Global.alert(tr("This map must have player spawns before exporting to a scene"))
 		return
 	
 	var pscene = get_packed_scene()
 	
 	if pscene == null:
-		Global.alert("Failed to export to scene: This map cannot be packed")
+		Global.alert(tr("Failed to export to scene: This map cannot be packed"))
 		return
 	
 	var res = ResourceSaver.save(pscene, path)
 	if res != OK:
-		Global.alert("Failed to export to scene: Failed to save the scene")
+		Global.alert(tr("Failed to export to scene: Failed to save the scene"))
 	else:
-		Global.alert("Successfully exported to scene")
+		Global.alert(tr("Successfully exported to scene"))
 
 func get_packed_scene() -> PackedScene:
 	var base_map = preload("res://scenes/maps/base_map.tscn").instantiate()

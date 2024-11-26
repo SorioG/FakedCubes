@@ -102,7 +102,7 @@ func _ready():
 	
 	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.EYES, 4)
 	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.BODY, 4)
-	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.MOUTH, 6)
+	#$screen1/Control/other_player.set_face(Global.FACE_TYPE.MOUTH, 4)
 	
 	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.EYES, randi_range(0,8))
 	#$screen1/Control/menu_player.set_face(Global.FACE_TYPE.MOUTH, randi_range(0,8))

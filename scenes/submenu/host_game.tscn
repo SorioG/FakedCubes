@@ -102,10 +102,9 @@ tooltip_text = "The network type to use when hosting.
 Direct: Can be used to connect via IP, Discord Invites and hosting a public server requires port forwarding
 WebRTC: Can be used to connect via Lobby ID, note that some players may not connect properly"
 alignment = 1
-item_count = 2
 selected = 0
+item_count = 2
 popup/item_0/text = "Direct"
-popup/item_0/id = 0
 popup/item_1/text = "WebRTC"
 popup/item_1/id = 1
 

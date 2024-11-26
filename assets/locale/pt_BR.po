@@ -1,0 +1,165 @@
+# LANGUAGE translation for Faked Cubes for the following files:
+# res://scenes/game.gd
+# res://scenes/game.tscn
+# res://scenes/loading_screen.gd
+# res://scenes/loading_screen.tscn
+# res://scenes/menu_screen.gd
+# res://scenes/menu_screen.tscn
+# res://scenes/boot.gd
+#
+# Automatically generated, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Faked Cubes\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: scenes/game.gd
+msgid "Failed to start the server, is the port open?"
+msgstr "Falha ao começar o servidor, o porta esta aberto?"
+
+#: scenes/game.gd
+msgid "Connecting to the server..."
+msgstr "Conectando ao servidor..."
+
+#: scenes/game.gd
+msgid "Invalid Network Type"
+msgstr "Tipo do rede invalido"
+
+#: scenes/game.gd
+msgid "Gamemode: "
+msgstr "Modo de jogo: "
+
+#: scenes/game.gd scenes/menu_screen.tscn
+msgid "Singleplayer"
+msgstr "Um Jogador"
+
+#: scenes/game.gd
+msgid "You have been disconnected from the server"
+msgstr "Você foi desconectado por o servidor"
+
+#: scenes/game.gd
+msgid "Failed to connect to the server"
+msgstr "Falha ao conectar o servidor"
+
+#: scenes/game.gd
+msgid "Sending client information..."
+msgstr "Enviando informação do cliente..."
+
+#: scenes/game.gd
+msgid " | "
+msgstr " | "
+
+#: scenes/game.gd
+msgid "<Waiting for signaling server>"
+msgstr "<Esperando por servidor signaling>"
+
+#: scenes/game.gd
+msgid "Waiting for server..."
+msgstr "Esperando por servidor..."
+
+#: scenes/game.tscn
+msgid "Start"
+msgstr "Começar"
+
+#: scenes/game.tscn
+msgid "Impostor"
+msgstr "Impostor"
+
+#: scenes/game.tscn
+msgid "Warning"
+msgstr "Aviso"
+
+#: scenes/game.tscn
+msgid "Failed to start game"
+msgstr "Falha ao começar o jogo"
+
+#: scenes/game.tscn
+msgid "Resume"
+msgstr "Resumir"
+
+#: scenes/game.tscn
+msgid "Quit"
+msgstr "Sair"
+
+#: scenes/loading_screen.gd scenes/loading_screen.tscn
+msgid "Loading..."
+msgstr "Carregando..."
+
+#: scenes/menu_screen.gd
+msgid "Back"
+msgstr "Voltar"
+
+#: scenes/menu_screen.gd scenes/menu_screen.tscn
+msgid "Mods"
+msgstr "Mods"
+
+#: scenes/menu_screen.gd
+msgid "You must restart the game for changes to take effect"
+msgstr "Você presisca reinicar o jogo para os mudanças ter efeito"
+
+#: scenes/menu_screen.gd
+msgid "Key any press"
+msgstr "Tecla qualquer aperta"
+
+#: scenes/menu_screen.tscn
+msgid "VERSION"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Host Game"
+msgstr "Hospedar Jogo"
+
+#: scenes/menu_screen.tscn
+msgid "Join Game"
+msgstr "Entrar no Jogo"
+
+#: scenes/menu_screen.tscn
+msgid "Quit to Desktop"
+msgstr "Sair para o desktop"
+
+#: scenes/menu_screen.tscn
+msgid "Local Game"
+msgstr "Jogo Local"
+
+#: scenes/menu_screen.tscn
+msgid "Developer Tools"
+msgstr "Ferramenta de desenvolvedor"
+
+#: scenes/menu_screen.tscn
+msgid "Skin Viewer"
+msgstr "Visualizador de Skin"
+
+#: scenes/menu_screen.tscn
+msgid "Map Editor"
+msgstr "Editor de mapa"
+
+#: scenes/menu_screen.tscn
+msgid "Press any key"
+msgstr "Aperta qualquer tecla"
+
+#: scenes/menu_screen.tscn
+msgid "Discord (Regret)"
+msgstr ""
+
+#: scenes/boot.gd
+msgid "Loading Custom Maps"
+msgstr "Carregando mapas customizados"
+
+#: scenes/boot.gd
+msgid "Loading Custom Skins"
+msgstr "Carregando skins customizados"
+
+#: scenes/boot.gd
+msgid "Loading User Data"
+msgstr "Carregando data de usuario"
+
+#: scenes/boot.gd
+msgid "Loading Mods"
+msgstr "Carregando Mods"

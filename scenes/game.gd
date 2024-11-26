@@ -205,7 +205,7 @@ func _ready():
 		is_server_public = Global.cubenet_is_public
 		
 		if err != OK:
-			Global.alert("Failed to start the server, is the port open?", "Server Error")
+			Global.alert(tr("Failed to start the server, is the port open?"), tr("Server Error"))
 			
 			if Global.is_dedicated_server:
 				# Automatically stop the dedicated server in case of the error
@@ -277,7 +277,7 @@ func _ready():
 			lobby_client.connect_to_url(Global.cubenet_get_websocket() + "/lobby")
 			
 		else:
-			Global.alert("Invalid Network Type", "Connection Failed")
+			Global.alert(tr("Invalid Network Type"), tr("Connection Failed"))
 			
 			_leave_game()
 		
@@ -300,6 +300,7 @@ func _ready():
 	
 	pause_bg.visible = false
 	pause_win.visible = false
+	$hud/userinfo.visible = false
 	
 	$hud/menu.connect("pressed", _pause_pressed)
 	$hud/PauseWindow/btns/resume.connect("pressed", _resume_pressed)
@@ -309,6 +310,8 @@ func _pause_pressed():
 	pause_bg.visible = true
 	pause_bg.modulate = Color.TRANSPARENT
 	pause_win.visible = true
+	$hud/userinfo.visible = true
+	$hud/userinfo.update()
 	#pause_win.position = Vector2(376, 80)
 	
 	pause_win.get_node("paused").play()
@@ -325,6 +328,7 @@ func _pause_pressed():
 func _resume_pressed():
 	pause_bg.visible = false
 	pause_win.visible = false
+	$hud/userinfo.visible = false
 	#pause_bg.color = Color.from_string("#00000093", Color.BLACK)
 	
 	
@@ -346,11 +350,11 @@ func parse_server_config():
 	
 	if not config: return
 	
-	server_info["name"] = config.get_value("Server", "name", "Dedicated Server")
+	server_info["name"] = config.get_value("Server", "name", "Faked Cubes Server")
 	server_info["discord_allow_invites"] = config.get_value("Discord", "allow_invites", true)
 	server_info["discord_show_name"] = config.get_value("Discord", "show_server_name", true)
 	is_custom_skins_allowed = config.get_value("Server", "allow_custom_skins", true)
-	is_voice_chat_allowed = config.get_value("Server", "voice_chat", true)
+	is_voice_chat_allowed = config.get_value("Server", "voice_chat", false)
 	
 	num_bots = config.get_value("Game", "max_bots", 0)
 	
@@ -517,11 +521,11 @@ func get_local_ip():
 
 func _process(_delta):
 	
-	bottominfo.text = "Gamemode: " + current_gamemode["name"]
+	bottominfo.text = tr("Gamemode: {0}").format([current_gamemode["name"]])
 	bottominfo.text += " | "
 	
 	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
-		bottominfo.text += "Singleplayer"
+		bottominfo.text += tr("Singleplayer")
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
 		if Global.net_type == Global.NET_TYPE.DIRECT:
 			bottominfo.text += get_local_ip() + ":" + str(Global.server_port)
@@ -529,12 +533,12 @@ func _process(_delta):
 			if webrtc_lobby_id == "invalid":
 				bottominfo.text += "<Waiting for signaling server>"
 			else:
-				bottominfo.text += "Lobby ID: " + webrtc_lobby_id
+				bottominfo.text += tr("Lobby ID: {0}").format([webrtc_lobby_id])
 	elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		if Global.net_type == Global.NET_TYPE.DIRECT:
 			bottominfo.text += Global.server_ip + ":" + str(Global.server_port)
 		elif Global.net_type == Global.NET_TYPE.WEBRTC:
-			bottominfo.text += "Lobby ID: " + webrtc_lobby_id
+			bottominfo.text += tr("Lobby ID: {0}").format([webrtc_lobby_id])
 	
 	if local_player:
 		if not get_tree().paused:
@@ -756,7 +760,7 @@ func show_role_reveal():
 		$hud/role_reveal/role_player.animation.play("idle2")
 		
 		if not multiplayer.is_server():
-			$hud/role_reveal/role_text.text = "Waiting for server..."
+			$hud/role_reveal/role_text.text = tr("Waiting for server...")
 			
 			await local_player.get_node("ServerSyncer").synchronized
 		
@@ -800,6 +804,7 @@ func show_results():
 	$hud/role_reveal/role_player.animation.play("idle")
 	
 	gamemode_node.show_results($hud/role_reveal/role_text, $hud/role_reveal/role_player)
+	
 	
 	$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin())
 	
@@ -914,17 +919,17 @@ func get_player_by_id(id: int) -> Player:
 	return get_node_or_null("players/Player" + str(id))
 
 func _on_disconnect():
-	Global.alert("You have been disconnected from the server", "Disconnected")
+	Global.alert(tr("You have been disconnected from the server"), tr("Disconnected"))
 	
 	_leave_game()
 
 func _on_connection_failed():
-	Global.alert("Failed to connect to the server", "Connection Failed")
+	Global.alert(tr("Failed to connect to the server"), tr("Connection Failed"))
 	
 	_leave_game()
 
 func _on_connected():
-	LoadingScreen.loadlabel.text = "Sending client information..."
+	LoadingScreen.loadlabel.text = tr("Sending client information...")
 	
 	net_client_info.rpc_id(1, Global.client_info)
 
@@ -1030,7 +1035,7 @@ func net_client_info(info: Dictionary):
 		err_msg = "Outdated Version! This server is using " + Global.version
 		can_join = false
 	
-	# Empty Usernames are kind of cheating.
+	# This client has a empty username.
 	if username.is_empty() and can_join:
 		err_msg = "The username must not be empty"
 		can_join = false
@@ -1072,6 +1077,12 @@ func net_client_info(info: Dictionary):
 				err_msg = "You do not have the " + str(max_mods-mod_count) + " required mods for this server."
 				can_join = false
 	
+	if game_state == STATE.INGAME and can_join:
+		err_msg = "The game is currently being played, try connecting again later."
+		can_join = false
+		
+		print("[WARN] Player " + str(id) + " tried to join, but the game is currently being played")
+	
 	# Let the mods handle it as well.
 	if Global.is_lua_enabled:
 		ModLoader.call_hook("handle_client_info", [info, err_msg, can_join])
@@ -1097,7 +1108,7 @@ func net_client_info(info: Dictionary):
 func net_info_fail(msg: String):
 	assert(multiplayer.get_remote_sender_id() == 1, "Server Only, Not from another peer")
 	
-	Global.alert(msg, "Connection Failed")
+	Global.alert(msg, tr("Connection Failed"))
 	
 	_leave_game()
 

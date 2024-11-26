@@ -25,6 +25,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 tab_alignment = 1
+current_tab = 0
 
 [node name="LAN" type="ItemList" parent="tabs"]
 layout_mode = 2
@@ -32,6 +33,7 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_n3683")
 item_count = 1
 item_0/text = "Searching for servers on local network"
 item_0/selectable = false
+metadata/_tab_index = 0
 
 [node name="Public" type="ItemList" parent="tabs"]
 visible = false
@@ -40,11 +42,13 @@ theme_override_styles/panel = SubResource("StyleBoxEmpty_n3683")
 item_count = 1
 item_0/text = "Requesting Server List from CubeNet"
 item_0/selectable = false
+metadata/_tab_index = 1
 
 [node name="Direct" type="VBoxContainer" parent="tabs"]
 visible = false
 layout_mode = 2
 alignment = 1
+metadata/_tab_index = 2
 
 [node name="ip" type="HBoxContainer" parent="tabs/Direct"]
 layout_mode = 2

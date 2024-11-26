@@ -1,0 +1,165 @@
+# LANGUAGE translation for Faked Cubes for the following files:
+# res://scenes/game.gd
+# res://scenes/game.tscn
+# res://scenes/loading_screen.gd
+# res://scenes/loading_screen.tscn
+# res://scenes/menu_screen.gd
+# res://scenes/menu_screen.tscn
+# res://scenes/boot.gd
+#
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Faked Cubes\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#: scenes/game.gd
+msgid "Failed to start the server, is the port open?"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Connecting to the server..."
+msgstr ""
+
+#: scenes/game.gd
+msgid "Invalid Network Type"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Gamemode: "
+msgstr ""
+
+#: scenes/game.gd
+#: scenes/menu_screen.tscn
+msgid "Singleplayer"
+msgstr ""
+
+#: scenes/game.gd
+msgid "You have been disconnected from the server"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Failed to connect to the server"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Sending client information..."
+msgstr ""
+
+#: scenes/game.gd
+msgid " | "
+msgstr ""
+
+#: scenes/game.gd
+msgid "<Waiting for signaling server>"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Waiting for server..."
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Start"
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Impostor"
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Warning"
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Failed to start game"
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Resume"
+msgstr ""
+
+#: scenes/game.tscn
+msgid "Quit"
+msgstr ""
+
+#: scenes/loading_screen.gd
+#: scenes/loading_screen.tscn
+msgid "Loading..."
+msgstr ""
+
+#: scenes/menu_screen.gd
+msgid "Back"
+msgstr ""
+
+#: scenes/menu_screen.gd
+#: scenes/menu_screen.tscn
+msgid "Mods"
+msgstr ""
+
+#: scenes/menu_screen.gd
+msgid "You must restart the game for changes to take effect"
+msgstr ""
+
+#: scenes/menu_screen.gd
+msgid "Key any press"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "VERSION"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Host Game"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Join Game"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Quit to Desktop"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Local Game"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Developer Tools"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Skin Viewer"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Map Editor"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Press any key"
+msgstr ""
+
+#: scenes/menu_screen.tscn
+msgid "Discord (Regret)"
+msgstr ""
+
+#: scenes/boot.gd
+msgid "Loading Custom Maps"
+msgstr ""
+
+#: scenes/boot.gd
+msgid "Loading Custom Skins"
+msgstr ""
+
+#: scenes/boot.gd
+msgid "Loading User Data"
+msgstr ""
+
+#: scenes/boot.gd
+msgid "Loading Mods"
+msgstr ""

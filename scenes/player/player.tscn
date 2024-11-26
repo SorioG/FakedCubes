@@ -79,6 +79,7 @@ layer = 0
 visible = false
 
 [node name="HUD" parent="ui" node_paths=PackedStringArray("player") instance=ExtResource("5_nwqw0")]
+auto_translate_mode = 2
 player = NodePath("../..")
 
 [node name="Sounds" type="Node2D" parent="."]
@@ -133,6 +134,7 @@ position = Vector2(1, 2)
 shape = SubResource("RectangleShape2D_tmedc")
 
 [node name="camera" type="Camera2D" parent="."]
+process_mode = 3
 enabled = false
 zoom = Vector2(1.2, 1.2)
 position_smoothing_enabled = true
@@ -143,12 +145,12 @@ libraries = {
 }
 
 [node name="username" type="Label" parent="."]
+auto_translate_mode = 2
 texture_filter = 4
 offset_left = -106.0
 offset_top = -59.0
 offset_right = 109.0
 offset_bottom = -33.0
-auto_translate = false
 localize_numeral_system = false
 text = "Player"
 label_settings = SubResource("LabelSettings_5hkom")

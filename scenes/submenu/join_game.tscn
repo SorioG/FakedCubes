@@ -1,20 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://c0ov0tbm6yiso"]
+[gd_scene load_steps=5 format=3 uid="uid://c0ov0tbm6yiso"]
 
 [ext_resource type="Script" path="res://scenes/submenu/join_game.gd" id="1_ydbdj"]
 [ext_resource type="PackedScene" uid="uid://dfbk18kcp12t1" path="res://scenes/server_browser.tscn" id="2_yefch"]
+[ext_resource type="PackedScene" uid="uid://ck3dirdhasoyl" path="res://scenes/player/userinfo.tscn" id="3_i84w5"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_c4pis"]
 font_size = 24
-outline_size = 5
-outline_color = Color(0, 0, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_1bxmj"]
-outline_size = 5
-outline_color = Color(0, 0, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_0yhjc"]
-font_size = 10
-font_color = Color(0.270222, 0.270222, 0.270222, 1)
 outline_size = 5
 outline_color = Color(0, 0, 0, 1)
 
@@ -58,35 +49,4 @@ offset_right = 128.0
 offset_bottom = 41.0
 text = "Back"
 
-[node name="userinfo" type="HBoxContainer" parent="ui"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -339.0
-offset_right = -6.0
-offset_bottom = 52.0
-grow_horizontal = 0
-mouse_filter = 2
-alignment = 2
-
-[node name="vert" type="VBoxContainer" parent="ui/userinfo"]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 1
-
-[node name="username" type="Label" parent="ui/userinfo/vert"]
-layout_mode = 2
-text = "Username"
-label_settings = SubResource("LabelSettings_1bxmj")
-horizontal_alignment = 2
-
-[node name="uuid" type="Label" parent="ui/userinfo/vert"]
-layout_mode = 2
-text = "UUID"
-label_settings = SubResource("LabelSettings_0yhjc")
-horizontal_alignment = 2
-
-[node name="avatar" type="TextureRect" parent="ui/userinfo"]
-layout_mode = 2
-expand_mode = 2
-stretch_mode = 4
+[node name="userinfo" parent="ui" instance=ExtResource("3_i84w5")]

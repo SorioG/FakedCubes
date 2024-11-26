@@ -11,7 +11,7 @@ func _ready():
 func show_screen():
 	visible = true
 	progress.value = 0
-	loadlabel.text = "Loading..."
+	loadlabel.text = tr("Loading...")
 	
 	if not Global.is_dedicated_server:
 		choose_random_art()

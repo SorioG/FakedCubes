@@ -5,7 +5,7 @@ func _ready():
 	LoadingScreen.show_screen()
 	
 	LoadingScreen.loadlabel.text = tr("Loading Custom Maps")
-	print(tr("Loading Custom Maps"))
+	print("Loading Custom Maps")
 	Global.load_custom_maps(Global.maps_path)
 	
 	await get_tree().process_frame
@@ -13,14 +13,14 @@ func _ready():
 	# Dedicated Servers cannot have their own user data, as well as custom skins.
 	if not Global.is_dedicated_server:
 		LoadingScreen.loadlabel.text = tr("Loading Custom Skins")
-		print(tr("Loading Custom Skins"))
+		print("Loading Custom Skins")
 		Global.load_custom_skins("user://skins")
 		
 		await get_tree().process_frame
 		
 		if not ("--no-data" in OS.get_cmdline_args()):
 			LoadingScreen.loadlabel.text = tr("Loading User Data")
-			print(tr("Loading User Data"))
+			print("Loading User Data")
 			Global.load_user_config()
 			
 			Global.can_save_config = true
@@ -34,10 +34,8 @@ func _ready():
 		await get_tree().process_frame
 	
 	if Global.is_lua_enabled:
-		# However, even disabling the mods, quitting the game will freeze for a second and then closes
-		# Not sure why, but i will try to work around this if i can.
 		LoadingScreen.loadlabel.text = tr("Loading Mods")
-		print(tr("Loading Mods"))
+		print("Loading Mods")
 		ModLoader.load_mods()
 	
 		await get_tree().process_frame
@@ -50,7 +48,7 @@ func _ready():
 		 please use --dediserver while in headless mode to host a dedicated server")
 	
 	if not Global.is_dedicated_server:
-		print("Faked Cubes - version: " + Global.version)
+		print("Faked Cubes " + Global.version)
 	
 	if handle_arguments():
 		return
@@ -103,7 +101,6 @@ func handle_arguments() -> bool:
 			Global.change_scene_file.call_deferred("res://scenes/map_editor.tscn")
 		
 		if arg == "--record-mode":
-			#print("Record Mode enabled - Recommended to use godot's built-in recorder or any other recording software")
 			Global.hide_menu = true
 		
 		if arg == "--username":

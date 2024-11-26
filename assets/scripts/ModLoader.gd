@@ -24,16 +24,13 @@ const REQUIRED_KEYS = [
 
 var mod_hooks := {}
 
+# Make sure that Lua can only be setup when lua-scripted mods are loaded
+var is_lua_loaded := false
+
 func lua_fields():
 	return ["load_mods","load_mod_info","init_mods","print_error"]
 
 func load_mods():
-	lua = LuaAPI.new()
-	
-	lua.bind_libraries(["base", "table", "string", "math"])
-	
-	lua_push_vars()
-	
 	var dir = DirAccess.open(Global.mods_path)
 	
 	if dir:
@@ -53,6 +50,13 @@ func load_mods():
 		print_error()
 	else:
 		print("[ModLoader] Cannot load mods (directory does not exist)")
+
+func setup_lua():
+	lua = LuaAPI.new()
+	lua.bind_libraries(["base", "table", "string", "math"])
+	lua_push_vars()
+	
+	is_lua_loaded = true
 
 func lua_push_vars():
 	lua.push_variant("print", _lua_print)
@@ -124,7 +128,7 @@ func init_mods():
 		
 		loaded_mod_info[info["id"]] = info
 		
-		if info.has("icon"):
+		if info.has("icon") and not Global.is_dedicated_server:
 			var img = Image.new()
 			
 			var err = img.load(info["dir"].path_join(info["icon"]))
@@ -134,7 +138,7 @@ func init_mods():
 				info["icon"] = ImageTexture.create_from_image(img)
 		
 		if not info.has("description"):
-			info["description"] = "No Description Provided"
+			info["description"] = tr("No Description Provided")
 		
 		# Don't do anything below if this mod is disabled
 		if not Global.disabled_mods.has(info["id"]):
@@ -171,6 +175,9 @@ func init_mods():
 				add_music(mods_dir[dir].path_join("music"))
 			
 			if info.has("main"):
+				if not is_lua_loaded:
+					setup_lua()
+				
 				var err = lua.do_file(mods_dir[dir].path_join(info["main"]))
 				
 				if err is LuaError:
@@ -190,7 +197,22 @@ func add_music(path: String):
 		while file != "":
 			if not dir.current_is_dir():
 				var nam = file.split(".")[0]
-				var musi = ResourceLoader.load(path.path_join(file))
+				var type = file.split(".")[1]
+				var file2 = FileAccess.open(path.path_join(file), FileAccess.READ)
+				var bytes := file2.get_buffer(file2.get_length())
+				
+				var musi: AudioStream = null
+				
+				if type == "ogg":
+					musi = AudioStreamOggVorbis.new()
+					musi.loop = true
+					musi.data = bytes
+				elif type == "mp3":
+					musi = AudioStreamMP3.new()
+					musi.loop = true
+					musi.data = bytes
+				else:
+					print("[ModLoader] Unsupported audio type for music file " + nam + "." + type)
 				
 				if musi is AudioStream:
 					print("[ModLoader] Added music '" + nam + "'")
@@ -208,7 +230,7 @@ func load_assets(dir: String, nam: String) -> Dictionary:
 		
 		while file != "":
 			if not dac.current_is_dir():
-				res[nam + "/" + file] = ResourceLoader.load(dir.path_join(file))
+				res[nam + "/" + file] = Image.load_from_file(dir.path_join(file))
 			
 			file = dac.get_next()
 	else:
@@ -226,7 +248,7 @@ func print_error():
 		msgs += "[" + mod + "] " + msg + "\n"
 	
 	if not Global.is_dedicated_server and not msgs.is_empty():
-		Global.alert("Failed to load mods, check the console (or a log file) for more information", "Error")
+		Global.alert(tr("Failed to load mods, check the console (or a log file) for more information"), tr("Error"))
 
 func get_mod_path(n: String) -> String:
 	if loaded_mod_dirs.has(n):

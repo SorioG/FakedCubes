@@ -9,7 +9,7 @@ This game adds many gamemodes such as **Deathmatch**, and uses [Lua API](https:/
 
 # Opening the project
 
-If you want to open this project, you will need **Godot 4.2.2**, download this version if you haven't already.
+If you want to open this project, you will need **Godot 4.3**, download this version if you haven't already.
 
 Clone this repository by running this command: `git clone https://github.com/SorioG/FakedCubes.git`
 

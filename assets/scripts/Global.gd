@@ -160,8 +160,7 @@ var cubenet_is_public := false
 
 var is_exiting := false
 
-# epic fail
-const DISCORD_LINK = "https://discord.gg/BFgQM5Wn2n"
+const DISCORD_LINK = ""
 
 const uuid = preload("res://assets/scripts/uuid.gd")
 
@@ -269,10 +268,7 @@ func save_user_config():
 func _exit_tree():
 	is_exiting = true
 	
-	if is_april_fools:
-		print("===== You thank for game playing our! =====")
-	else:
-		print("===== Thank you for playing our game! =====")
+	print("===== Thank you for playing our game! =====")
 	
 	# Dedicated Servers cannot save user data (they're not the player themselves)
 	if not is_dedicated_server and can_save_config:
@@ -380,12 +376,18 @@ func alert(msg: String, title: String = "Alert"):
 
 func load_server_config():
 	var config := ConfigFile.new()
+	var config_version = 1
 	
-	var path = OS.get_executable_path().get_base_dir().path_join("server.cfg")
-	
+	var path = OS.get_executable_path().get_base_dir().path_join("config/server.cfg")
+	var force_save = false
 	var err = config.load(path)
 	
-	if err != OK:
+	if err == OK:
+		if config.get_value("Misc", "config_version") != config_version:
+			print("[WARN] Outdated config version! regenerating server configuration")
+			force_save = true
+	
+	if err != OK or force_save:
 		# Game Configuration
 		config.set_value("Game", "gamemode", 0)
 		config.set_value("Game", "max_bots", 0)
@@ -394,15 +396,18 @@ func load_server_config():
 		
 		# Server Configuration
 		config.set_value("Server", "port", Global.server_port)
-		config.set_value("Server", "name", "Dedicated Server")
+		config.set_value("Server", "name", "Faked Cubes Dedicated Server")
 		config.set_value("Server", "allow_early_join", false)
 		config.set_value("Server", "allow_custom_skins", true)
 		config.set_value("Server", "allow_modded_clients", true)
-		config.set_value("Server", "voice_chat", true)
+		config.set_value("Server", "voice_chat", false)
 		
 		# Discord-related Configuration
 		config.set_value("Discord", "allow_invites", true)
 		config.set_value("Discord", "show_server_name", true)
+		
+		# Other Configuration
+		config.set_value("Misc", "config_version", config_version)
 		
 		config.save(path)
 	
