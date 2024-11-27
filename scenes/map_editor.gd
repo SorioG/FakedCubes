@@ -303,8 +303,9 @@ func playtest():
 			
 			game._on_start_pressed.call_deferred()
 
-func _player_spawned_signal(_plr: Player):
-	pass
+func _player_spawned_signal(plr: Player):
+	plr.c_game = current_game
+	plr.hud.game = current_game
 
 func _game_ended():
 	Global.alert(tr("This gamemode has now ended."))

@@ -90,11 +90,11 @@ var game_modes: Array[Dictionary] = [
 		"icon": load("res://assets/sprites/action_icons7.png"),
 		"base": ArenaGamemode
 	},
-	{
-		"name": "Detective & Sherrif",
-		"icon": load("res://assets/sprites/action_icons9.png"),
-		"base": ImpostorGamemode
-	}
+	#{
+	#	"name": "Detective & Sherrif",
+	#	"icon": load("res://assets/sprites/action_icons9.png"),
+	#	"base": ImpostorGamemode
+	#}
 ]
 
 var player_skins: Dictionary = GameData.player_skins
@@ -152,6 +152,8 @@ var disabled_mods := []
 var has_mods_enabled := false
 
 var is_april_fools := false
+
+var is_first_load := true
 
 var cubenet_server_url := ""
 var cubenet_headers = ["User-Agent: FakedCubes/" + version]

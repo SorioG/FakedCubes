@@ -29,9 +29,11 @@ offset_left = 46.0
 offset_top = 32.0
 offset_right = 696.0
 offset_bottom = 589.0
+current_tab = 0
 
 [node name="Skin" type="VBoxContainer" parent="ui/panel"]
 layout_mode = 2
+metadata/_tab_index = 0
 
 [node name="skininfo" type="RichTextLabel" parent="ui/panel/Skin"]
 layout_mode = 2
@@ -89,6 +91,7 @@ text = "Save Icon as Image"
 visible = false
 layout_mode = 2
 follow_focus = true
+metadata/_tab_index = 1
 
 [node name="btns" type="VBoxContainer" parent="ui/panel/Animations"]
 layout_mode = 2
@@ -99,7 +102,7 @@ alignment = 1
 title = "Choose a Skin"
 initial_position = 1
 size = Vector2i(800, 500)
-ok_button_text = "Abrir"
+ok_button_text = "Open"
 mode_overrides_title = false
 file_mode = 0
 access = 2

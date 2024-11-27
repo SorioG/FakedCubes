@@ -4,7 +4,7 @@ class_name ImpostorGamemode
 var vote_in_session = false
 var accused_player: Player
 
-const MAX_VOTE_TIMER = 900
+const MAX_VOTE_TIMER = 200
 
 var vote_timer = MAX_VOTE_TIMER
 var vote_points = 0
@@ -122,6 +122,7 @@ func can_start_game() -> String:
 	return "OK"
 
 func update_actions(_btn1: TextureButton, _btn2: TextureButton, _btn3: TextureButton, _btn4: TextureButton):
+	if Global.is_dedicated_server: return
 	_btn2.visible = (game.local_player.current_role == Global.PLAYER_ROLE.IMPOSTOR)
 
 func player_do_action(_player: Player, _action: int):
@@ -265,6 +266,7 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 		fatepanel.visible = true
 		fatepanel.get_node("box/label").text = picker.player_name + " has accused " + plr.player_name + " for bad actions, do you think that this is the impostor?"
 		fatepanel.get_node("box/btns").visible = (plr != game.local_player)
+		fatepanel.get_node("TimeBar").max_value = MAX_VOTE_TIMER
 		
 		if game.local_player.is_killed:
 			fatepanel.get_node("box/btns").visible = false
@@ -280,6 +282,7 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 	
 	# Makes the bot vote depending on what they know about.
 	for bot in game.get_players():
+		if Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT: break # Let the server handle automatic votes by bots
 		if not bot.is_bot: continue
 		if picker == bot: continue
 		if bot.is_killed: continue
@@ -288,15 +291,22 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 			vote_points += 1
 		else:
 			# The bot doesn't know or witness the murderer yet, vote either yes or no
-			if Global.rand_chance(0.9):
+			if Global.rand_chance(0.2):
 				vote_points += 1
-			elif Global.rand_chance(0.1):
+			elif Global.rand_chance(0.5):
 				vote_points -= 1
 	
 	# Forget about what you witness, bots.
 	for bot in game.get_players():
 		if not bot.is_bot: continue
 		bot.bot_witness_killer = null
+	
+	# Let the clients know about votes set by bots, so the vote points are in sync.
+	if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		game.custom_rpc.rpc({
+			"type": "set_vote_points",
+			"points": vote_points
+		})
 	
 	# FIXME: The reported animation doesn't seem to play for some reason (maybe bot?)
 	picker.is_running = false
@@ -310,6 +320,14 @@ func receive_custom_rpc(_data: Dictionary, _id: int):
 			vote_points += 1
 		else:
 			vote_points -= 1
+	if _data["type"] == "vote_timer" and Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		vote_timer = _data["timer"]
+	if _data["type"] == "set_vote_points":
+		# This is neccesary in order to keep in sync with bots in multiplayer.
+		vote_points = _data["points"]
+	if _data["type"] == "vote_finished":
+		vote_points = _data["points"]
+		_vote_finished()
 
 func game_tick():
 	if vote_in_session:
@@ -318,49 +336,62 @@ func game_tick():
 			p.is_ghost = true
 			p.camera.offset = Vector2.ZERO
 		
-		vote_timer -= 1
+		vote_timer -= 10 * game.time_delta
 		
-		if vote_timer < 1:
-			var fate_success = (vote_points > 0)
-			
-			
-			
-			if fate_success:
-				accused_player.kill_player()
-				accused_player.is_ghost = true
-				
-			
-			if game.local_player:
-				var fatepanel = game.local_player.hud.get_node("accused_voting")
-				fatepanel.visible = false
-				
-				var smsg = ""
-				var sicon = load("res://assets/sprites/action_icons1.png")
-				
-				if fate_success:
-					smsg = "Anyone has chosen to kill " + accused_player.player_name
-				else:
-					smsg = "Anyone has chosen to trust " + accused_player.player_name
-					sicon = load("res://assets/sprites/action_icons8.png")
-				
-				if fate_success:
-					smsg += " with " + str(vote_points) + " votes"
-					if accused_player.current_role == Global.PLAYER_ROLE.IMPOSTOR:
-						smsg += " (it's a impostor)"
-					else:
-						smsg += " (it's a innocent)"
-				else:
-					smsg += " with " + str(vote_points).erase(0) + " votes"
-			
-				game.chat_window.add_message("Game", smsg, sicon)
-				
-				print("[Impostor] " + smsg)
-			
-			accused_player = null
-			vote_in_session = false
-			
-			for p in game.get_alive_players():
-				p.kill_cooldown = 800
-				p.visible = true
-				p.animation.play("RESET")
-				p.position = game.get_random_spawn().position
+		if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+			game.custom_rpc.rpc({
+				"type": "vote_timer",
+				"timer": vote_timer
+			})
+		
+		if vote_timer < 1 and Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+			game.custom_rpc.rpc({
+				"type": "vote_finished",
+				"points": vote_points
+			})
+		
+		if game.local_player:
+			var fatepanel = game.local_player.hud.get_node("accused_voting")
+			fatepanel.get_node("TimeBar").value = vote_timer
+
+func _vote_finished():
+	var fate_success = (vote_points > 0)
+	
+	if fate_success and Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		accused_player.kill_player()
+		accused_player.is_ghost = true
+	
+	if game.local_player:
+		var fatepanel = game.local_player.hud.get_node("accused_voting")
+		fatepanel.visible = false
+	
+	var smsg = ""
+	var sicon = load("res://assets/sprites/action_icons1.png")
+		
+	if fate_success:
+		smsg = "Anyone has chosen to kill " + accused_player.player_name
+	else:
+		smsg = "Anyone has chosen to trust " + accused_player.player_name
+		sicon = load("res://assets/sprites/action_icons8.png")
+	
+	if fate_success:
+		smsg += " with " + str(vote_points) + " votes"
+		if accused_player.current_role == Global.PLAYER_ROLE.IMPOSTOR:
+			smsg += " (it's a impostor)"
+		else:
+			smsg += " (it's a innocent)"
+	#else:
+	#	smsg += " with " + str(vote_points).erase(0) + " votes"
+	
+	game.chat_window.add_message("Game", smsg, sicon)
+		
+	print("[Impostor] " + smsg)
+	
+	accused_player = null
+	vote_in_session = false
+	
+	for p in game.get_alive_players():
+		p.kill_cooldown = 800
+		p.visible = true
+		p.animation.play("RESET")
+		p.position = game.get_random_spawn().position

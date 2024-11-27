@@ -77,10 +77,17 @@ func _ready():
 	#game.connect("player_spawned", _bot_spawned)
 	#game.connect("game_ended", _game_ended)
 	
-	animate_menu(false, .1)
-	
-	menu.visible = false
-	$UI/ColorRect.visible = false
+	if Global.is_first_load:
+		animate_menu(false, .1)
+		
+		menu.visible = false
+		$UI/ColorRect.visible = false
+		
+		Global.is_first_load = false
+	else:
+		$UI/ColorRect.visible = true
+		$UI/StartLogo.visible = false
+		$UI/StartLabel.visible = false
 	
 	#$screen1/Control/menu_player/ui.visible = false
 	

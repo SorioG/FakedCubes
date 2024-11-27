@@ -64,6 +64,8 @@ var is_split_screen: bool = false
 var split_screen_player: int = 1
 var local_player2: Player
 
+var time_delta := 0.0
+
 ## Server information to be sent to server list and clients connecting
 var server_info: Dictionary = {
 	"name": "Server", # Name of the server
@@ -378,7 +380,8 @@ func change_to_lobby():
 ## Automatically start the game on a dedicated server
 func dediserver_autostart():
 	if game_state == STATE.INGAME: return
-	if can_start_game() == "OK":
+	# Human Players still need to be present before starting the game
+	if can_start_game() == "OK" and get_players(true).size() > 0:
 		if not dediserver_confirmed:
 			dediserver_confirmed = true
 			#print("[Game] Automatically starting the game")
@@ -520,6 +523,7 @@ func get_local_ip():
 	return "127.0.0.1"
 
 func _process(_delta):
+	time_delta = _delta
 	
 	bottominfo.text = tr("Gamemode: {0}").format([current_gamemode["name"]])
 	bottominfo.text += " | "
@@ -751,7 +755,6 @@ func get_players_by_role(role: int) -> Array[Player]:
 	return res
 
 func show_role_reveal():
-	
 	# Make the reveal visible even without the player (to stop the bots from moving)
 	$hud/role_reveal.visible = true
 	
@@ -805,9 +808,12 @@ func show_results():
 	
 	gamemode_node.show_results($hud/role_reveal/role_text, $hud/role_reveal/role_player)
 	
-	
-	$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin())
-	
+	# FIXME: This works fine in singleplayer or as a server, but random player cannot be choosed by winning role
+	# when playing as a client
+	if get_players_by_role(winning_role).size() > 0:
+		$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin())
+	else:
+		$hud/role_reveal/role_player.set_skin(local_player.get_skin())
 
 func get_alive_players() -> Array[Player]:
 	var res: Array[Player] = []

@@ -3,3 +3,5 @@
 
 # WebRTC GDExtension
 addons/webrtc/
+
+*.mo

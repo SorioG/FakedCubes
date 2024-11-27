@@ -261,7 +261,7 @@ func set_pickplayer_list(exclude_self: bool = false, hide_dead: bool = false):
 	for i in list.get_children():
 		i.queue_free()
 	
-	for p in game.get_players():
+	for p in player.c_game.get_players():
 		if p == player and exclude_self: continue
 		
 		var btn = Button.new()

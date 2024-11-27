@@ -257,7 +257,7 @@ menu={
 [internationalization]
 
 locale/translations=PackedStringArray("res://assets/locale/pt_BR.po")
-locale/translations_pot_files=PackedStringArray("res://scenes/game.gd", "res://scenes/game.tscn", "res://scenes/loading_screen.gd", "res://scenes/loading_screen.tscn", "res://scenes/menu_screen.gd", "res://scenes/menu_screen.tscn", "res://scenes/boot.gd")
+locale/translations_pot_files=PackedStringArray("res://scenes/game.gd", "res://scenes/game.tscn", "res://scenes/loading_screen.gd", "res://scenes/loading_screen.tscn", "res://scenes/menu_screen.gd", "res://scenes/menu_screen.tscn", "res://scenes/boot.gd", "res://scenes/map_editor.gd", "res://scenes/map_editor.tscn", "res://scenes/server_browser.gd", "res://scenes/server_browser.tscn", "res://scenes/skin_previewer.gd", "res://scenes/skin_previewer.tscn", "res://scenes/submenu/host_game.gd", "res://scenes/submenu/host_game.tscn", "res://scenes/submenu/join_game.gd", "res://scenes/submenu/join_game.tscn", "res://scenes/modlist/mod_list.gd", "res://scenes/modlist/mod_list.tscn")
 
 [rendering]
 

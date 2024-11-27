@@ -12,17 +12,24 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Faked Cubes\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: scenes/game.gd
 msgid "Failed to start the server, is the port open?"
 msgstr "Falha ao começar o servidor, o porta esta aberto?"
+
+#: scenes/game.gd
+msgid "Server Error"
+msgstr "Erro do servidor"
 
 #: scenes/game.gd
 msgid "Connecting to the server..."
@@ -33,16 +40,32 @@ msgid "Invalid Network Type"
 msgstr "Tipo do rede invalido"
 
 #: scenes/game.gd
-msgid "Gamemode: "
-msgstr "Modo de jogo: "
+msgid "Connection Failed"
+msgstr "Falha do conexão"
+
+#: scenes/game.gd
+msgid "Gamemode: {0}"
+msgstr "Modo de jogo: {0}"
 
 #: scenes/game.gd scenes/menu_screen.tscn
 msgid "Singleplayer"
 msgstr "Um Jogador"
 
 #: scenes/game.gd
+msgid "Lobby ID: {0}"
+msgstr "ID do Lobby: {0}"
+
+#: scenes/game.gd
+msgid "Waiting for server..."
+msgstr "Esperando por servidor..."
+
+#: scenes/game.gd
 msgid "You have been disconnected from the server"
 msgstr "Você foi desconectado por o servidor"
+
+#: scenes/game.gd
+msgid "Disconnected"
+msgstr "Desconectado"
 
 #: scenes/game.gd
 msgid "Failed to connect to the server"
@@ -58,11 +81,7 @@ msgstr " | "
 
 #: scenes/game.gd
 msgid "<Waiting for signaling server>"
-msgstr "<Esperando por servidor signaling>"
-
-#: scenes/game.gd
-msgid "Waiting for server..."
-msgstr "Esperando por servidor..."
+msgstr "<Esperando por servidor de sinalização>"
 
 #: scenes/game.tscn
 msgid "Start"
@@ -72,7 +91,7 @@ msgstr "Começar"
 msgid "Impostor"
 msgstr "Impostor"
 
-#: scenes/game.tscn
+#: scenes/game.tscn scenes/map_editor.tscn
 msgid "Warning"
 msgstr "Aviso"
 
@@ -84,7 +103,7 @@ msgstr "Falha ao começar o jogo"
 msgid "Resume"
 msgstr "Resumir"
 
-#: scenes/game.tscn
+#: scenes/game.tscn scenes/skin_previewer.tscn
 msgid "Quit"
 msgstr "Sair"
 
@@ -92,7 +111,7 @@ msgstr "Sair"
 msgid "Loading..."
 msgstr "Carregando..."
 
-#: scenes/menu_screen.gd
+#: scenes/menu_screen.gd scenes/submenu/host_game.tscn scenes/submenu/join_game.tscn
 msgid "Back"
 msgstr "Voltar"
 
@@ -102,27 +121,23 @@ msgstr "Mods"
 
 #: scenes/menu_screen.gd
 msgid "You must restart the game for changes to take effect"
-msgstr "Você presisca reinicar o jogo para os mudanças ter efeito"
+msgstr "Você precisa reiniciar o jogo para os mudanças ter efeito"
 
 #: scenes/menu_screen.gd
 msgid "Key any press"
 msgstr "Tecla qualquer aperta"
 
-#: scenes/menu_screen.tscn
-msgid "VERSION"
-msgstr ""
-
-#: scenes/menu_screen.tscn
+#: scenes/menu_screen.tscn scenes/submenu/host_game.tscn
 msgid "Host Game"
 msgstr "Hospedar Jogo"
 
-#: scenes/menu_screen.tscn
+#: scenes/menu_screen.tscn scenes/submenu/join_game.tscn
 msgid "Join Game"
 msgstr "Entrar no Jogo"
 
 #: scenes/menu_screen.tscn
 msgid "Quit to Desktop"
-msgstr "Sair para o desktop"
+msgstr "Sair para o computador"
 
 #: scenes/menu_screen.tscn
 msgid "Local Game"
@@ -163,3 +178,371 @@ msgstr "Carregando data de usuario"
 #: scenes/boot.gd
 msgid "Loading Mods"
 msgstr "Carregando Mods"
+
+#: scenes/map_editor.gd
+msgid "This map must have player spawns before playtesting"
+msgstr "Esse mapa presisca ter o spawns do jogador antes de testar"
+
+#: scenes/map_editor.gd
+msgid "Cannot playtest the map."
+msgstr "Não e possível testar o mapa."
+
+#: scenes/map_editor.gd
+msgid "This gamemode has now ended."
+msgstr "Esse modo de jogo agora terminou."
+
+#: scenes/map_editor.gd
+msgid "Failed to save map"
+msgstr "Falha ao salvar o mapa"
+
+#: scenes/map_editor.gd
+msgid "Successfully saved map to file"
+msgstr "Sucesso ao salvar mapa para o arquivo"
+
+#: scenes/map_editor.gd
+msgid "Failed to load map: Invalid .fcmap file"
+msgstr "Falha ao carregar mapa: Invalido arquivo .fcmap"
+
+#: scenes/map_editor.gd
+msgid "Failed to load map: Version mismatch (current one is {0})"
+msgstr "Falha ao carregar mapa: Versão desatualizado (o atual e {0})"
+
+#: scenes/map_editor.gd
+msgid "Loading Map..."
+msgstr "Carregando Mapa..."
+
+#: scenes/map_editor.gd
+msgid "Adding Objects..."
+msgstr "Adicionando Objetos..."
+
+#: scenes/map_editor.gd
+msgid "This map must have player spawns before exporting to a scene"
+msgstr "Esse mapa presisca ter o spawn do jogador antes de exportar como cena"
+
+#: scenes/map_editor.gd
+msgid "Failed to export to scene: This map cannot be packed"
+msgstr "Falha ao exportar como cena: Esse mapa não pode ser empacotado"
+
+#: scenes/map_editor.gd
+msgid "Failed to export to scene: Failed to save the scene"
+msgstr "Falha ao exportar como cena: Falha ao salvar o cena"
+
+#: scenes/map_editor.gd
+msgid "Successfully exported to scene"
+msgstr "Sucesso ao exportar como cena"
+
+#: scenes/map_editor.gd scenes/map_editor.tscn
+msgid "Playtest"
+msgstr "Testar"
+
+#: scenes/map_editor.gd
+msgid "Stop Playtesting"
+msgstr "Parar de testar"
+
+#: scenes/map_editor.tscn
+msgid "File"
+msgstr "Arquivo"
+
+#: scenes/map_editor.tscn
+msgid "New"
+msgstr "Novo"
+
+#: scenes/map_editor.tscn
+msgid "Save"
+msgstr "Salvar"
+
+#: scenes/map_editor.tscn
+msgid "Load"
+msgstr "Carregar"
+
+#: scenes/map_editor.tscn
+msgid "Quit Map Editor"
+msgstr "Sair do editor de mapa"
+
+#: scenes/map_editor.tscn
+msgid "Export to Scene"
+msgstr "Exportar como cena"
+
+#: scenes/map_editor.tscn
+msgid "Object"
+msgstr "Objeto"
+
+#: scenes/map_editor.tscn
+msgid "Add New Object"
+msgstr "Adicionar novo objeto"
+
+#: scenes/map_editor.tscn
+msgid "Delete All Objects"
+msgstr "Deletar todos objetos"
+
+#: scenes/map_editor.tscn
+msgid "Game"
+msgstr "Jogo"
+
+#: scenes/map_editor.tscn
+msgid "Select"
+msgstr "Selecione"
+
+#: scenes/map_editor.tscn
+msgid "Move"
+msgstr "Mover"
+
+#: scenes/map_editor.tscn
+msgid "Delete"
+msgstr "Deletar"
+
+#: scenes/map_editor.tscn
+msgid "Draw"
+msgstr "Desenhar"
+
+#: scenes/map_editor.tscn
+msgid "Solid"
+msgstr "Sólido"
+
+#: scenes/map_editor.tscn
+msgid "Ground"
+msgstr "Chão"
+
+#: scenes/map_editor.tscn
+msgid "Erase"
+msgstr "Apagar"
+
+#: scenes/map_editor.tscn
+msgid "Spawn"
+msgstr "Spawn"
+
+#: scenes/map_editor.tscn
+msgid "Computer"
+msgstr "Computador"
+
+#: scenes/map_editor.tscn
+msgid "Report Button"
+msgstr "Botão de reporte"
+
+#: scenes/map_editor.tscn
+msgid "Custom"
+msgstr "Customizado"
+
+#: scenes/map_editor.tscn
+msgid "Are you sure you want to create a new map? All of your progress will be lost!"
+msgstr ""
+"Você tem certeza que você queria criar o novo mapa? Todo do seu progresso vai ser perdido!"
+
+#: scenes/map_editor.tscn
+msgid "Add Custom Object"
+msgstr "Adicionar Objeto Customizado"
+
+#: scenes/map_editor.tscn
+msgid "PNG Image"
+msgstr "Imagem PNG"
+
+#: scenes/map_editor.tscn
+msgid "Save Map"
+msgstr "Salvar Mapa"
+
+#: scenes/map_editor.tscn
+msgid "Faked Cubes Map"
+msgstr "Mapa do Faked Cubes"
+
+#: scenes/map_editor.tscn
+msgid "Text Scenes"
+msgstr "Texto do cena"
+
+#: scenes/map_editor.tscn
+msgid "Lobby"
+msgstr "Lobby"
+
+#: scenes/server_browser.gd
+msgid "Failed to listen for LAN Servers"
+msgstr "Falha ao procurar por servidores de LAN"
+
+#: scenes/server_browser.gd
+msgid "CubeNet Instance not set, you won't have the public servers"
+msgstr "Instancia do CubeNet não e mudado, você não vai ter o servidores públicos"
+
+#: scenes/server_browser.gd
+msgid "Invalid CubeNet Instance URL, did you include the slash after the url?"
+msgstr "Invalido URL do Instanca do CubeNet, você potou o barra depois do url?"
+
+#: scenes/server_browser.gd
+msgid "There are no public servers online right now."
+msgstr "Não tem o servidores públicos online agora."
+
+#: scenes/server_browser.gd
+msgid "Failed to request the server list, check your internet and try again"
+msgstr ""
+"Falha ao solicitar o lista do servidores, verifique o conexão de rede e tente novamente"
+
+#: scenes/server_browser.tscn
+msgid "LAN"
+msgstr "LAN"
+
+#: scenes/server_browser.tscn
+msgid "Searching for servers on local network"
+msgstr "Procurando por servidores do rede local"
+
+#: scenes/server_browser.tscn
+msgid "Public"
+msgstr "Publico"
+
+#: scenes/server_browser.tscn
+msgid "Requesting Server List from CubeNet"
+msgstr "Solicitando Lista de Servidores do CubeNet"
+
+#: scenes/server_browser.tscn scenes/submenu/host_game.tscn
+msgid "Direct"
+msgstr "Direto"
+
+#: scenes/server_browser.tscn
+msgid "IP: "
+msgstr "IP: "
+
+#: scenes/server_browser.tscn
+msgid "Port: "
+msgstr "Porta: "
+
+#: scenes/server_browser.tscn
+msgid "Connect"
+msgstr "Conectar"
+
+#: scenes/server_browser.tscn
+msgid ""
+"Please keep in mind that the servers you connect are not official and not controlled by "
+"us.\n"
+"We are in no way responsible for anything caused by unofficial servers.\n"
+msgstr ""
+
+#: scenes/skin_previewer.gd scenes/skin_previewer.tscn
+msgid "[center]Filename: "
+msgstr "[center]Nome do arquivo: "
+
+#: scenes/skin_previewer.tscn
+msgid "Skin"
+msgstr "Skin"
+
+#: scenes/skin_previewer.tscn
+msgid "Skin Icon:"
+msgstr "Ícone do Skin:"
+
+#: scenes/skin_previewer.tscn
+msgid "Skin:"
+msgstr "Skin:"
+
+#: scenes/skin_previewer.tscn
+msgid "Load Skin"
+msgstr "Carregar Skin"
+
+#: scenes/skin_previewer.tscn
+msgid "Random Face"
+msgstr "Cara aleatório"
+
+#: scenes/skin_previewer.tscn
+msgid "Flip Player"
+msgstr "Virar Jogador"
+
+#: scenes/skin_previewer.tscn
+msgid "Icon:"
+msgstr "Ícone:"
+
+#: scenes/skin_previewer.tscn
+msgid "Take Screenshot"
+msgstr "Tirar captura do tela"
+
+#: scenes/skin_previewer.tscn
+msgid "Save Icon as Image"
+msgstr "Salvar Ícone como Imagem"
+
+#: scenes/skin_previewer.tscn
+msgid "Animations"
+msgstr "Animações"
+
+#: scenes/skin_previewer.tscn
+msgid "Choose a Skin"
+msgstr "Escolher o Skin"
+
+#: scenes/skin_previewer.tscn
+msgid "Open"
+msgstr "Abrir"
+
+#: scenes/skin_previewer.tscn
+msgid "Skin Icon"
+msgstr "Ícone do Skin"
+
+#: scenes/submenu/host_game.tscn
+msgid "Server Name:"
+msgstr "Nome do Servidor:"
+
+#: scenes/submenu/host_game.tscn
+msgid ""
+"Name of the server to use when hosting, this will be shown in server list, rich presence."
+msgstr ""
+"Nome do servidor para usar quando hospedar, esse vai ser mostrado em lista do servidor, "
+"presença rica."
+
+#: scenes/submenu/host_game.tscn
+msgid "Server Port:"
+msgstr "Porta do Servidor:"
+
+#: scenes/submenu/host_game.tscn
+msgid "Network Type:"
+msgstr "Tipo do Rede:"
+
+#: scenes/submenu/host_game.tscn
+msgid ""
+"The network type to use when hosting.\n"
+"Direct: Can be used to connect via IP, Discord Invites and hosting a public server "
+"requires port forwarding\n"
+"WebRTC: Can be used to connect via Lobby ID, note that some players may not connect "
+"properly"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "WebRTC"
+msgstr "WebRTC"
+
+#: scenes/submenu/host_game.tscn
+msgid ""
+"Whatever or not to make this server public, this will request CubeNet to list your "
+"server.\n"
+"This will not work when CubeNet Instance is empty."
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Public Server"
+msgstr "Servidor Publico"
+
+#: scenes/submenu/host_game.tscn
+msgid "Host Server"
+msgstr "Hospedar Servidor"
+
+#: scenes/modlist/mod_list.gd
+msgid "API Version: 1.0"
+msgstr "Versão API: 1.0"
+
+#: scenes/modlist/mod_list.tscn
+msgid "You don't have any mods installed."
+msgstr "Você não tem mods instalado."
+
+#: scenes/modlist/mod_list.tscn
+msgid "Disable All"
+msgstr "Desativar todos"
+
+#: scenes/modlist/mod_list.tscn
+msgid "Enable All"
+msgstr "Ativar todos"
+
+#: scenes/modlist/mod_list.tscn
+msgid "Open Mods Directory"
+msgstr "Abrir diretório do mods"
+
+#: scenes/modlist/mod_list.tscn
+msgid "The documentation is not ready yet, it will be enabled when it's ready."
+msgstr "O Documentação não esta pronto já, isso vai ser ativado quando esta pronto."
+
+#: scenes/modlist/mod_list.tscn
+msgid "Open Documentation"
+msgstr "Abrir documentação"
+
+#: scenes/modlist/mod_list.tscn
+msgid "API Version: 0.0"
+msgstr "Versão API: 0.0"

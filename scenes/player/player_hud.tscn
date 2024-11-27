@@ -31,13 +31,13 @@ outline_size = 5
 outline_color = Color(0, 0, 0, 1)
 
 [node name="HUD" type="Control"]
+auto_translate_mode = 2
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-auto_translate = false
 focus_mode = 1
 mouse_filter = 1
 script = ExtResource("1_hdqkj")
@@ -75,10 +75,12 @@ texture_normal = ExtResource("1_b5c1i")
 stretch_mode = 5
 
 [node name="gameinfo" type="PopupPanel" parent="."]
+transparent_bg = true
 title = "Game Info"
 initial_position = 2
 size = Vector2i(800, 410)
 transparent = true
+auto_translate = false
 theme_override_styles/panel = SubResource("StyleBoxFlat_hb1vw")
 
 [node name="tabs" type="TabContainer" parent="gameinfo"]
@@ -88,9 +90,11 @@ offset_right = 797.0
 offset_bottom = 407.0
 focus_mode = 2
 tab_alignment = 1
+current_tab = 0
 
 [node name="Player" type="HBoxContainer" parent="gameinfo/tabs"]
 layout_mode = 2
+metadata/_tab_index = 0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="gameinfo/tabs/Player"]
 layout_mode = 2
@@ -137,10 +141,12 @@ texture = ExtResource("6_n3wd2")
 [node name="TabContainer" type="TabContainer" parent="gameinfo/tabs/Player"]
 layout_mode = 2
 size_flags_horizontal = 3
+current_tab = 0
 
 [node name="Skin" type="ScrollContainer" parent="gameinfo/tabs/Player/TabContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+metadata/_tab_index = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="gameinfo/tabs/Player/TabContainer/Skin"]
 layout_mode = 2
@@ -175,6 +181,7 @@ flat = true
 [node name="Hats" type="ScrollContainer" parent="gameinfo/tabs/Player/TabContainer"]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 1
 
 [node name="hatlist" type="GridContainer" parent="gameinfo/tabs/Player/TabContainer/Hats"]
 layout_mode = 2
@@ -183,6 +190,7 @@ columns = 3
 [node name="Game" type="ScrollContainer" parent="gameinfo/tabs"]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 1
 
 [node name="btns" type="VBoxContainer" parent="gameinfo/tabs/Game"]
 layout_mode = 2
@@ -199,12 +207,11 @@ text = "Gamemode: "
 
 [node name="option" type="OptionButton" parent="gameinfo/tabs/Game/btns/gamemode"]
 layout_mode = 2
-item_count = 2
 selected = 0
 fit_to_longest_item = false
+item_count = 2
 popup/item_0/text = "Impostor"
 popup/item_0/icon = ExtResource("5_g4llw")
-popup/item_0/id = 0
 popup/item_1/text = "Deathmatch"
 popup/item_1/icon = ExtResource("1_qokn0")
 popup/item_1/id = 1
@@ -233,10 +240,9 @@ text = "Custom Map: "
 
 [node name="option" type="OptionButton" parent="gameinfo/tabs/Game/btns/custommap"]
 layout_mode = 2
-item_count = 1
 selected = 0
+item_count = 1
 popup/item_0/text = "None"
-popup/item_0/id = 0
 
 [node name="cmaplobby" type="Button" parent="gameinfo/tabs/Game/btns"]
 layout_mode = 2
@@ -251,6 +257,7 @@ stream = ExtResource("7_uoudm")
 
 [node name="pickplayer" type="PopupPanel" parent="."]
 size = Vector2i(700, 420)
+auto_translate = false
 
 [node name="panel" type="VBoxContainer" parent="pickplayer"]
 anchors_preset = 15
@@ -258,8 +265,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 696.0
-offset_bottom = 416.0
+offset_right = -4.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -290,7 +297,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -144.0
-offset_bottom = -63.0
+offset_bottom = -56.0
 grow_horizontal = 2
 grow_vertical = 0
 
@@ -299,10 +306,6 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 106.0
-offset_top = -9.0
-offset_right = -86.0
-offset_bottom = 8.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0705882, 0.0705882, 0.0705882, 0.556863)
@@ -336,3 +339,12 @@ text = "Yes"
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "No"
+
+[node name="TimeBar" type="ProgressBar" parent="accused_voting"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 4.0
+grow_horizontal = 2
+show_percentage = false

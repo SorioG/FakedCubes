@@ -6,6 +6,18 @@
 # res://scenes/menu_screen.gd
 # res://scenes/menu_screen.tscn
 # res://scenes/boot.gd
+# res://scenes/map_editor.gd
+# res://scenes/map_editor.tscn
+# res://scenes/server_browser.gd
+# res://scenes/server_browser.tscn
+# res://scenes/skin_previewer.gd
+# res://scenes/skin_previewer.tscn
+# res://scenes/submenu/host_game.gd
+# res://scenes/submenu/host_game.tscn
+# res://scenes/submenu/join_game.gd
+# res://scenes/submenu/join_game.tscn
+# res://scenes/modlist/mod_list.gd
+# res://scenes/modlist/mod_list.tscn
 #
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -22,6 +34,10 @@ msgid "Failed to start the server, is the port open?"
 msgstr ""
 
 #: scenes/game.gd
+msgid "Server Error"
+msgstr ""
+
+#: scenes/game.gd
 msgid "Connecting to the server..."
 msgstr ""
 
@@ -30,7 +46,11 @@ msgid "Invalid Network Type"
 msgstr ""
 
 #: scenes/game.gd
-msgid "Gamemode: "
+msgid "Connection Failed"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Gamemode: {0}"
 msgstr ""
 
 #: scenes/game.gd
@@ -39,7 +59,19 @@ msgid "Singleplayer"
 msgstr ""
 
 #: scenes/game.gd
+msgid "Lobby ID: {0}"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Waiting for server..."
+msgstr ""
+
+#: scenes/game.gd
 msgid "You have been disconnected from the server"
+msgstr ""
+
+#: scenes/game.gd
+msgid "Disconnected"
 msgstr ""
 
 #: scenes/game.gd
@@ -58,10 +90,6 @@ msgstr ""
 msgid "<Waiting for signaling server>"
 msgstr ""
 
-#: scenes/game.gd
-msgid "Waiting for server..."
-msgstr ""
-
 #: scenes/game.tscn
 msgid "Start"
 msgstr ""
@@ -71,6 +99,7 @@ msgid "Impostor"
 msgstr ""
 
 #: scenes/game.tscn
+#: scenes/map_editor.tscn
 msgid "Warning"
 msgstr ""
 
@@ -83,6 +112,7 @@ msgid "Resume"
 msgstr ""
 
 #: scenes/game.tscn
+#: scenes/skin_previewer.tscn
 msgid "Quit"
 msgstr ""
 
@@ -92,6 +122,8 @@ msgid "Loading..."
 msgstr ""
 
 #: scenes/menu_screen.gd
+#: scenes/submenu/host_game.tscn
+#: scenes/submenu/join_game.tscn
 msgid "Back"
 msgstr ""
 
@@ -109,14 +141,12 @@ msgid "Key any press"
 msgstr ""
 
 #: scenes/menu_screen.tscn
-msgid "VERSION"
-msgstr ""
-
-#: scenes/menu_screen.tscn
+#: scenes/submenu/host_game.tscn
 msgid "Host Game"
 msgstr ""
 
 #: scenes/menu_screen.tscn
+#: scenes/submenu/join_game.tscn
 msgid "Join Game"
 msgstr ""
 
@@ -162,4 +192,366 @@ msgstr ""
 
 #: scenes/boot.gd
 msgid "Loading Mods"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "This map must have player spawns before playtesting"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Cannot playtest the map."
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "This gamemode has now ended."
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Failed to save map"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Successfully saved map to file"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Failed to load map: Invalid .fcmap file"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Failed to load map: Version mismatch (current one is {0})"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Loading Map..."
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Adding Objects..."
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "This map must have player spawns before exporting to a scene"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Failed to export to scene: This map cannot be packed"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Failed to export to scene: Failed to save the scene"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Successfully exported to scene"
+msgstr ""
+
+#: scenes/map_editor.gd
+#: scenes/map_editor.tscn
+msgid "Playtest"
+msgstr ""
+
+#: scenes/map_editor.gd
+msgid "Stop Playtesting"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "File"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "New"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Save"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Load"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Quit Map Editor"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Export to Scene"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Object"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Add New Object"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Delete All Objects"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Game"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Select"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Move"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Delete"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Draw"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Solid"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Ground"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Erase"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Spawn"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Computer"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Report Button"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Custom"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Are you sure you want to create a new map? All of your progress will be lost!"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Add Custom Object"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "PNG Image"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Save Map"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Faked Cubes Map"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Text Scenes"
+msgstr ""
+
+#: scenes/map_editor.tscn
+msgid "Lobby"
+msgstr ""
+
+#: scenes/server_browser.gd
+msgid "Failed to listen for LAN Servers"
+msgstr ""
+
+#: scenes/server_browser.gd
+msgid "CubeNet Instance not set, you won't have the public servers"
+msgstr ""
+
+#: scenes/server_browser.gd
+msgid "Invalid CubeNet Instance URL, did you include the slash after the url?"
+msgstr ""
+
+#: scenes/server_browser.gd
+msgid "There are no public servers online right now."
+msgstr ""
+
+#: scenes/server_browser.gd
+msgid "Failed to request the server list, check your internet and try again"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "LAN"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "Searching for servers on local network"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "Public"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "Requesting Server List from CubeNet"
+msgstr ""
+
+#: scenes/server_browser.tscn
+#: scenes/submenu/host_game.tscn
+msgid "Direct"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "IP: "
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "Port: "
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid "Connect"
+msgstr ""
+
+#: scenes/server_browser.tscn
+msgid ""
+"Please keep in mind that the servers you connect are not official and not controlled by us.\n"
+"We are in no way responsible for anything caused by unofficial servers.\n"
+msgstr ""
+
+#: scenes/skin_previewer.gd
+#: scenes/skin_previewer.tscn
+msgid "[center]Filename: "
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Skin"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Skin Icon:"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Skin:"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Load Skin"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Random Face"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Flip Player"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Icon:"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Take Screenshot"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Save Icon as Image"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Animations"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Choose a Skin"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Open"
+msgstr ""
+
+#: scenes/skin_previewer.tscn
+msgid "Skin Icon"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Server Name:"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Name of the server to use when hosting, this will be shown in server list, rich presence."
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Server Port:"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Network Type:"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid ""
+"The network type to use when hosting.\n"
+"Direct: Can be used to connect via IP, Discord Invites and hosting a public server requires port forwarding\n"
+"WebRTC: Can be used to connect via Lobby ID, note that some players may not connect properly"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "WebRTC"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid ""
+"Whatever or not to make this server public, this will request CubeNet to list your server.\n"
+"This will not work when CubeNet Instance is empty."
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Public Server"
+msgstr ""
+
+#: scenes/submenu/host_game.tscn
+msgid "Host Server"
+msgstr ""
+
+#: scenes/modlist/mod_list.gd
+msgid "API Version: 1.0"
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "You don't have any mods installed."
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "Disable All"
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "Enable All"
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "Open Mods Directory"
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "The documentation is not ready yet, it will be enabled when it's ready."
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "Open Documentation"
+msgstr ""
+
+#: scenes/modlist/mod_list.tscn
+msgid "API Version: 0.0"
 msgstr ""
