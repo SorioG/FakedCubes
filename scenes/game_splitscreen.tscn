@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bhnfdjbfrdv31"]
 
-[ext_resource type="Script" path="res://scenes/game_splitscreen.gd" id="1_cqmdl"]
+[ext_resource type="Script" uid="uid://diy8xhfub3oce" path="res://scenes/game_splitscreen.gd" id="1_cqmdl"]
 
 [node name="SplitScreen" type="Node"]
 script = ExtResource("1_cqmdl")

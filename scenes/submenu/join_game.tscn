@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://c0ov0tbm6yiso"]
 
-[ext_resource type="Script" path="res://scenes/submenu/join_game.gd" id="1_ydbdj"]
+[ext_resource type="Script" uid="uid://4igsqkxu4co0" path="res://scenes/submenu/join_game.gd" id="1_ydbdj"]
 [ext_resource type="PackedScene" uid="uid://dfbk18kcp12t1" path="res://scenes/server_browser.tscn" id="2_yefch"]
 [ext_resource type="PackedScene" uid="uid://ck3dirdhasoyl" path="res://scenes/player/userinfo.tscn" id="3_i84w5"]
 

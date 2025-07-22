@@ -56,10 +56,11 @@ func _process(_delta):
 			DiscordRPC.details = "Playing Singleplayer"
 		else:
 			if game.has_connected:
-				if game.server_info["discord_show_name"]:
-					DiscordRPC.details = "In Server: " + game.server_info["name"]
-				else:
-					DiscordRPC.details = "In Server: <Server Name Hidden>"
+				#if game.server_info["discord_show_name"]:
+				#	DiscordRPC.details = "In Server: " + game.server_info["name"]
+				#else:
+				#	DiscordRPC.details = "In Server: <Server Name Hidden>"
+				DiscordRPC.details = "Playing Multiplayer"
 				
 				DiscordRPC.party_id = game.server_info["uuid"]
 				DiscordRPC.current_party_size = game.get_players(true).size()

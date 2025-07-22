@@ -450,9 +450,11 @@ func start_server_thread():
 		server_thread.start(_server_console_thread)
 
 func _server_console_thread():
+	if OS.get_stdin_type() == OS.STD_HANDLE_INVALID: return
+	
 	var text = ""
 	while text != "quit":
-		text = OS.read_string_from_stdin().strip_edges()
+		text = OS.read_string_from_stdin(1024).strip_edges()
 		_handle_console_command.call_deferred(text, _on_server_cmd)
 	
 	get_tree().quit()

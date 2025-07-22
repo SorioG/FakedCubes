@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c07nljlplmmpj"]
 
-[ext_resource type="Script" path="res://addons/randomnamesgenerator/emitter_Button.gd" id="1_raldu"]
+[ext_resource type="Script" uid="uid://bpr2duptiwmhf" path="res://addons/randomnamesgenerator/emitter_Button.gd" id="1_raldu"]
 
 [sub_resource type="Theme" id="Theme_lptk6"]
 

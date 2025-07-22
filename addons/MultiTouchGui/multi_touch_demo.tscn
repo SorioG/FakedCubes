@@ -1,11 +1,11 @@
 [gd_scene load_steps=8 format=3 uid="uid://dk3r2xc8u5a1o"]
 
-[ext_resource type="Script" path="res://addons/MultiTouchGui/MultiTouchVSlider.gd" id="1_paf1y"]
-[ext_resource type="Script" path="res://addons/MultiTouchGui/MultiTouchHSlider.gd" id="2_lqhkq"]
-[ext_resource type="Script" path="res://addons/MultiTouchGui/MultiTouchButton.gd" id="3_k5aum"]
-[ext_resource type="Script" path="res://addons/MultiTouchGui/MultiTouchPanel.gd" id="4_6gugy"]
-[ext_resource type="Script" path="res://addons/MultiTouchGui/MultiTouchLineEdit.gd" id="5_8kvhb"]
-[ext_resource type="Script" path="res://addons/MultiTouchGui/multi_touch_debug.gd" id="6_uasqy"]
+[ext_resource type="Script" uid="uid://qcekfv6cmm21" path="res://addons/MultiTouchGui/MultiTouchVSlider.gd" id="1_paf1y"]
+[ext_resource type="Script" uid="uid://dbq2wy0d186nh" path="res://addons/MultiTouchGui/MultiTouchHSlider.gd" id="2_lqhkq"]
+[ext_resource type="Script" uid="uid://dhlgowl4blgg6" path="res://addons/MultiTouchGui/MultiTouchButton.gd" id="3_k5aum"]
+[ext_resource type="Script" uid="uid://cc5ar36ukj8ur" path="res://addons/MultiTouchGui/MultiTouchPanel.gd" id="4_6gugy"]
+[ext_resource type="Script" uid="uid://b22mhsh7ybpdi" path="res://addons/MultiTouchGui/MultiTouchLineEdit.gd" id="5_8kvhb"]
+[ext_resource type="Script" uid="uid://cwbaut5lpn7if" path="res://addons/MultiTouchGui/multi_touch_debug.gd" id="6_uasqy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vssji"]
 corner_radius_top_left = 50

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://ck3dirdhasoyl"]
 
-[ext_resource type="Script" path="res://scenes/player/userinfo.gd" id="1_vbg22"]
+[ext_resource type="Script" uid="uid://dcewh7nxxlu7h" path="res://scenes/player/userinfo.gd" id="1_vbg22"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_1bxmj"]
 outline_size = 5

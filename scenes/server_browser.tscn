@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://dfbk18kcp12t1"]
 
-[ext_resource type="Script" path="res://scenes/server_browser.gd" id="1_70faq"]
+[ext_resource type="Script" uid="uid://e7f0cjmnnohg" path="res://scenes/server_browser.gd" id="1_70faq"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n3683"]
 
