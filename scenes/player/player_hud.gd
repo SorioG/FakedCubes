@@ -23,6 +23,7 @@ func _ready():
 	
 	if game is Game:
 		game.game_ended.connect(_reset_actions)
+		game.rcon_response.connect(_rcon_output)
 	
 	bots_slider.connect("value_changed", _change_bots)
 	gm_options.connect("item_selected", _change_gamemode)
@@ -54,6 +55,7 @@ func _ready():
 	
 	$accused_voting/box/btns/yesbtn.connect("pressed", _vote_button.bind(true))
 	$accused_voting/box/btns/nobtn.connect("pressed", _vote_button.bind(false))
+	$RemoteConsole/VBox/ConsoleInput.connect("text_submitted", _rcon_input)
 
 func _vote_button(is_yes: bool):
 	$select.play()
@@ -225,7 +227,7 @@ func _process(_delta):
 	else:
 		#if gamemode["base"] ==  "impostor":
 		#	actions.get_node("btn2").visible = (player.current_role == Global.PLAYER_ROLE.IMPOSTOR)
-		if game:
+		if game and player.is_local_player:
 			game.gamemode_node.update_actions(actions.get_node("btn1"),actions.get_node("btn2"),actions.get_node("btn3"),actions.get_node("btn4"))
 		
 		if gameinfo.visible:
@@ -269,7 +271,10 @@ func set_pickplayer_list(exclude_self: bool = false, hide_dead: bool = false):
 		btn.name = p.name
 		btn.text = p.player_name
 		
-		btn.icon = ImageTexture.create_from_image(p.get_still_image())
+		if hide_dead and p.is_killed:
+			btn.icon = ImageTexture.create_from_image(p.get_still_image(Global.MOOD_TYPE.DEAD,Global.MOOD_TYPE.DEAD,Global.MOOD_TYPE.DEAD))
+		else:
+			btn.icon = ImageTexture.create_from_image(p.get_still_image())
 		
 		list.add_child(btn)
 		
@@ -285,3 +290,14 @@ func _handle_picked(plr: Player, tag: String):
 	#game.gamemode_node.hud_picked_player(plr, tag, self)
 	
 	player.net_picked_player.rpc(plr.name, tag)
+
+func _rcon_input(cmd: String):
+	$RemoteConsole/VBox/ConsoleInput.set_deferred("text", "")
+	$RemoteConsole/VBox/ConsoleOutput.text += "\n" + "> " + cmd
+	
+	game.net_rcon_command.rpc_id(1, cmd)
+	
+	$select.play()
+
+func _rcon_output(res: String):
+	$RemoteConsole/VBox/ConsoleOutput.text += "\n" + res

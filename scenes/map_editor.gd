@@ -95,11 +95,11 @@ func _process(_delta):
 func draw_tile():
 	var pos = map.local_to_map(get_local_mouse_position())
 	if current_draw_tool == DRAW_TOOL.SOLID:
-		map.set_cell(0, pos, 0, Vector2i(1, 0))
+		map.set_cell(pos, 0, Vector2i(1, 0))
 	elif current_draw_tool == DRAW_TOOL.GROUND:
-		map.set_cell(0, pos, 0, Vector2i(0, 0))
+		map.set_cell(pos, 0, Vector2i(0, 0))
 	elif current_draw_tool == DRAW_TOOL.ERASE:
-		map.set_cell(0, pos, -1)
+		map.set_cell(pos, -1)
 
 func move_camera():
 	var mv_x = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
@@ -249,6 +249,7 @@ func playtest():
 		
 		var game = Global.GAME_NODE.instantiate()
 		game.num_bots = 0
+		current_game = game
 		
 		game.get_node("hud/menu").visible = false
 		
@@ -257,7 +258,7 @@ func playtest():
 		
 		Global.net_mode = Global.GAME_TYPE.SINGLEPLAYER
 		
-		add_child(game)
+		get_tree().root.add_child(game)
 		
 		if is_instance_valid(game.current_map):
 			game.current_map.free()
@@ -274,10 +275,10 @@ func playtest():
 		
 		game.move_players()
 		
-		game.connect("player_spawned", _player_spawned_signal)
+		#game.connect("player_spawned", _player_spawned_signal)
 		game.connect("game_ended", _game_ended)
 		
-		current_game = game
+		
 		
 		is_following_player = true
 		
@@ -303,9 +304,9 @@ func playtest():
 			
 			game._on_start_pressed.call_deferred()
 
-func _player_spawned_signal(plr: Player):
-	plr.c_game = current_game
-	plr.hud.game = current_game
+#func _player_spawned_signal(plr: Player):
+	#plr.c_game = current_game
+	#plr.hud.game = current_game
 
 func _game_ended():
 	Global.alert(tr("This gamemode has now ended."))
@@ -438,9 +439,9 @@ func load_map(path: String):
 
 func get_map_json() -> Dictionary:
 	var data := {}
-	for cell in map.get_used_cells(0):
-		var id = map.get_cell_source_id(0, cell)
-		var atlas = map.get_cell_atlas_coords(0, cell)
+	for cell in map.get_used_cells():
+		var id = map.get_cell_source_id(cell)
+		var atlas = map.get_cell_atlas_coords(cell)
 		
 		data[str(cell.x) + "," + str(cell.y)] = {
 			"id": id,
@@ -488,7 +489,7 @@ func load_map_json(data: Dictionary):
 		var pos = Vector2i(int(split[0]), int(split[1]))
 		var info = data[cell]
 		
-		map.set_cell(0, pos, info["id"], Vector2i(info["atlas"]["x"], info["atlas"]["y"]))
+		map.set_cell(pos, info["id"], Vector2i(info["atlas"]["x"], info["atlas"]["y"]))
 
 func load_object_json(data: Array, reader: ZIPReader):
 	_object_selected(1)
@@ -568,13 +569,13 @@ func export_to_scene(path: String):
 func get_packed_scene() -> PackedScene:
 	var base_map = preload("res://scenes/maps/base_map.tscn").instantiate()
 	
-	var tilemap: TileMap = base_map.get_node("TileMap")
+	var tilemap: TileMapLayer = base_map.get_node("TileMap")
 	
-	for cell in map.get_used_cells(0):
-		var id = map.get_cell_source_id(0, cell)
-		var atlas = map.get_cell_atlas_coords(0, cell)
+	for cell in map.get_used_cells():
+		var id = map.get_cell_source_id(cell)
+		var atlas = map.get_cell_atlas_coords(cell)
 		
-		tilemap.set_cell(0, cell, id, atlas)
+		tilemap.set_cell(cell, id, atlas)
 	
 	var spawns2 = base_map.get_node("spawns")
 	

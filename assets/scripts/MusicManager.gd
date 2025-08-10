@@ -2,6 +2,9 @@ extends Node
 
 var music = {
 	"title": load("res://assets/music/fakedcubes_theme_new.ogg"),
+	"takeoff-fx": load("res://assets/music/takeoff-fx.ogg"),
+	"outworld": load("res://assets/music/outworld.mp3"),
+	"once_more_metal": load("res://assets/music/once_more_metal.ogg"),
 	"title_old": load("res://assets/music/fakedcubes_theme.ogg")
 }
 

@@ -2,6 +2,13 @@
 <img src="assets/sprites/logo.png" alt="Logo" width="200">
 </p>
 
+<p align="center">
+    <img alt="Godot Version" src="https://img.shields.io/badge/godot-4.4.1-blue">
+    <a href="https://discord.gg/GKydVf3FMK">
+     <img alt="Discord" src="https://img.shields.io/discord/1173719883108855818?label=discord">
+    </a>
+</p>
+
 # About
 Faked Cubes is a moddable, social deduction game made using [Godot Engine](https://godotengine.org)
 

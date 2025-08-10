@@ -101,7 +101,7 @@ func _ready():
 	#	$UI/menu/mobilebtns.visible = false
 	
 	if not Global.hide_menu:
-		MusicManager.play_music("title")
+		MusicManager.play_music("takeoff-fx")
 	else:
 		$UI.hide()
 		

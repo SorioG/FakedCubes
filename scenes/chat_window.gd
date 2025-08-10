@@ -15,13 +15,13 @@ func _ready():
 func add_message(user: String, message: String, avatar: Texture2D = null):
 	var clone = msg_node.instantiate()
 	if avatar != null:
-		clone.get_node("panel/box/avatar").texture = avatar
+		clone.get_node("box/avatar").texture = avatar
 	
-	clone.get_node("panel/box/info/username").text = user
-	clone.get_node("panel/box/info/message").text = message
+	clone.get_node("box/info/username").text = user
+	clone.get_node("box/info/message").text = message
 	
 	clone.visible = true
-	clone.custom_minimum_size = Vector2(0, 200)
+	#clone.custom_minimum_size = Vector2(0, 200)
 	messages.add_child(clone)
 	
 	await get_tree().process_frame

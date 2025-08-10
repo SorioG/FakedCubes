@@ -5,3 +5,6 @@
 addons/webrtc/
 
 *.mo
+
+# Directories used for testing
+server-data/

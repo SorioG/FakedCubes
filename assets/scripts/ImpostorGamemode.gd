@@ -6,8 +6,44 @@ var accused_player: Player
 
 const MAX_VOTE_TIMER = 200
 
+# Bot Messages used during the accused voting
+
+# Messages used when the bot has witnessed the killer while the suspect is visible.
+var bot_witness_messages = [
+	"It's {0}! I saw them killing {1}!",
+	"Do you not see what {0} did? They killed {1}!",
+	"I was minding my own business, when i saw {0} has killed {1}, this shocked me.",
+	"{0} is sus, who let them unalive {1}?",
+	"I know who killed {1}! It's... {0}, yeah."
+]
+
+# Messages used when the bot doesn't know who killed them
+var bot_unknown_report_messages = [
+	"I don't know, is it {0}?",
+	"I was wandering around, and suddenly there is a dead body appearing in front of me, surely it's {0}.",
+	"If {0} is not a faker, I'm going to crash out >:(",
+	"Ahem, is it correct if {0} has killed someone?"
+]
+
+# Messages used when the accused bot has randomly said something
+var bot_accused_mercy_messages = [
+	"Why :(",
+	"VOTE NO ANYONE",
+	"You're accusing a innocent?? D:",
+	"Nah, they're self reporting. lol",
+	"Me vs anyone, am i getting voted out?",
+	"I'm just a dumb bot, beep boop",
+	"I'm accepting defeat, just vote yes.",
+	":)",
+	"D:"
+]
+
 var vote_timer = MAX_VOTE_TIMER
 var vote_points = 0
+var every_vote = 0
+
+# Singleplayer Only
+var sp_has_voted := false
 
 #var fate_kill_sound = AudioStreamPlayer.new()
 
@@ -74,6 +110,15 @@ func game_start():
 	#if impostor_used > 0:
 	#	print("not enough impostors used")
 
+func game_end():
+	for player in game.get_players():
+		player.animation.play("RESET")
+		player.bot_witness_killer = null
+	
+	if game.local_player:
+		var fatepanel = game.local_player.hud.get_node("accused_voting")
+		fatepanel.visible = false
+
 func role_reveal(label: Label, player: Player):
 	var role = game.local_player.current_role
 	
@@ -122,7 +167,6 @@ func can_start_game() -> String:
 	return "OK"
 
 func update_actions(_btn1: TextureButton, _btn2: TextureButton, _btn3: TextureButton, _btn4: TextureButton):
-	if Global.is_dedicated_server: return
 	_btn2.visible = (game.local_player.current_role == Global.PLAYER_ROLE.IMPOSTOR)
 
 func player_do_action(_player: Player, _action: int):
@@ -158,11 +202,23 @@ func bot_tick(bot: Player):
 		return
 	
 	if bot.current_role == Global.PLAYER_ROLE.IMPOSTOR:
-		bot.is_running = false
+		var viewers = 0
+		var victim: Player
 		
-		bot.bot_walk_rand()
+		for p in bot.get_players_in_view():
+			if p.is_killed: continue
+			if p.current_role == bot.current_role: continue
+			viewers += 1
+			victim = p
 		
-		bot.bot_try_kill()
+		if viewers <= 1 and victim:
+			bot.bot_is_pathfinding = false
+			bot.bot_walk_to(victim.position)
+			
+			bot.bot_try_kill()
+		else:
+			bot.is_running = false
+			bot.bot_walk_rand()
 	else:
 		bot.is_running = (not is_fine)
 		bot.bot_walk_rand()
@@ -171,33 +227,45 @@ func bot_tick(bot: Player):
 			# We're fine, as long as there is no faker killing in front of me.
 			var found_dead: Player
 			var need_sos = false
+			var viewers = 0
+			
+			for p in bot.get_players_in_view():
+				if p.is_killed: continue
+				viewers += 1
 			
 			for p in bot.get_players_in_view():
 				if p.is_ghost: continue
+				if not p.is_killed:
+					if p.animation.current_animation == "kill":
+						# The faker somehow missed their attack or saw them killing them, this player needs to be accused
+						bot.bot_witness_killer = p
+						bot.bot_random_accuse = true
+						break
 				if p.is_killed:
 					found_dead = p
 					break
 			
 			if found_dead:
+				bot.bot_saw_dead_player = found_dead
 				for f in found_dead.get_players_nearby():
 					if f.is_killed: continue
 					if f.animation.current_animation == "kill":
 						need_sos = true
 						bot.bot_witness_killer = f
 						break
-					elif Global.rand_chance(0.2):
+					elif randi_range(1, 100) > 30:
 						need_sos = true
 						bot.bot_witness_killer = f
+						bot.bot_random_accuse = true
 						break
 				
 				if not need_sos:
 					bot.bot_witness_killer = bot
-			
 		else:
 			# Panic, and rush to the report button if they're closely near one.
 			var target_btn = get_first_report_button()
 			
-			has_found_button = (bot.position.distance_to(target_btn.position) < 9)
+			has_found_button = (bot.position.distance_to(target_btn.position) < 42)
 			
 			if has_found_button:
 				if bot.bot_witness_killer != bot:
@@ -212,16 +280,10 @@ func bot_tick(bot: Player):
 				
 				bot.bot_witness_killer = null
 			else:
-				if (bot.position.distance_to(target_btn.position) > 30):
-					if bot.position.x < target_btn.position.x:
-						bot.bot_move_x = 1
-					elif bot.position.x > target_btn.position.x:
-						bot.bot_move_x = -1
-					
-					if bot.position.y < target_btn.position.y:
-						bot.bot_move_y = 1
-					elif bot.position.y > target_btn.position.y:
-						bot.bot_move_y = -1
+				if not bot.bot_is_pathfinding and not bot.bot_force_pathfind_pos:
+					bot.bot_force_pathfind(target_btn.position)
+				
+				bot.bot_walk_rand()
 
 func get_first_report_button() -> InteractableObject:
 	for obj in game.current_map.get_children():
@@ -237,16 +299,19 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 	
 	# Make every dead player a ghost before voting for the fate.
 	for p in game.get_players():
-		if not p.is_killed: continue
-		if not p.is_ghost: continue
-		p.is_ghost = true
-		p.camera.offset = Vector2.ZERO
+		if p.is_ghost: continue
+		if p.is_killed or p.is_frozen:
+			p.is_killed = true
+			p.is_ghost = true
+			p.is_frozen = false
+			p.camera.offset = Vector2.ZERO
+			p.animation.play("RESET")
 	
 	for f in game.get_players():
-		f.position = game.get_random_spawn().position
 		if not f.is_killed:
 			if plr == f: continue
 			if picker == f: continue
+			f.position = game.get_random_spawn().position
 			f.visible = false
 			f.animation.play("appearing")
 	
@@ -260,6 +325,7 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 	vote_timer = MAX_VOTE_TIMER
 	vote_points = 1
 	accused_player = plr
+	every_vote = 1
 	
 	if game.local_player:
 		var fatepanel = game.local_player.hud.get_node("accused_voting")
@@ -274,6 +340,13 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 		if picker == game.local_player:
 			fatepanel.get_node("box/btns").visible = false
 		
+		if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
+			if plr == game.local_player:
+				sp_has_voted = true
+			if game.local_player.is_killed:
+				sp_has_voted = true
+			if picker == game.local_player:
+				sp_has_voted = true
 	
 	print("[Impostor] " + picker.player_name + " has accused " + plr.player_name + " for bad actions")
 	
@@ -289,29 +362,51 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 		if bot.bot_witness_killer == plr:
 			# Always vote yes!
 			vote_points += 1
+		elif bot.current_role == Global.PLAYER_ROLE.IMPOSTOR:
+			# Be evil and vote yes or no depending on which player got accused
+			if plr.current_role == Global.PLAYER_ROLE.IMPOSTOR:
+				# This accused player is one of us, so vote no
+				vote_points -= 1
+			else:
+				# Always vote yes on all innocents
+				vote_points += 1
 		else:
 			# The bot doesn't know or witness the murderer yet, vote either yes or no
-			if Global.rand_chance(0.2):
+			if randf_range(1, 10) > 9:
 				vote_points += 1
-			elif Global.rand_chance(0.5):
+			elif randf_range(1, 100) > 99:
 				vote_points -= 1
+	
+	if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		if picker.is_bot:
+			if picker.bot_random_accuse or picker.bot_witness_killer == picker:
+				picker.fake_say.rpc(bot_unknown_report_messages.pick_random().format([plr.player_name]))
+			else:
+				picker.fake_say.rpc(bot_witness_messages.pick_random().format([picker.bot_witness_killer.player_name, picker.bot_saw_dead_player.player_name]))
+		if plr.is_bot and randf_range(1, 8) > 6:
+			plr.fake_say.rpc(bot_accused_mercy_messages.pick_random())
 	
 	# Forget about what you witness, bots.
 	for bot in game.get_players():
 		if not bot.is_bot: continue
 		bot.bot_witness_killer = null
+		bot.bot_saw_dead_player = null
+		bot.bot_random_accuse = false
+		bot.bot_is_pathfinding = false
 	
 	# Let the clients know about votes set by bots, so the vote points are in sync.
 	if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		game.custom_rpc.rpc({
 			"type": "set_vote_points",
-			"points": vote_points
+			"points": vote_points,
+			"every_vote": every_vote
 		})
 	
-	# FIXME: The reported animation doesn't seem to play for some reason (maybe bot?)
 	picker.is_running = false
 	picker.bot_move_x = 0
 	picker.bot_move_y = 0
+	await get_tree().physics_frame
+	picker.position = plr.position + Vector2(randf_range(-100, 100),randf_range(-100, 100))
 	picker.animation.play("reported")
 
 func receive_custom_rpc(_data: Dictionary, _id: int):
@@ -320,23 +415,40 @@ func receive_custom_rpc(_data: Dictionary, _id: int):
 			vote_points += 1
 		else:
 			vote_points -= 1
+		every_vote += 1
+		if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
+			sp_has_voted = true
 	if _data["type"] == "vote_timer" and Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		vote_timer = _data["timer"]
 	if _data["type"] == "set_vote_points":
 		# This is neccesary in order to keep in sync with bots in multiplayer.
 		vote_points = _data["points"]
+		every_vote = _data["every_vote"]
 	if _data["type"] == "vote_finished":
 		vote_points = _data["points"]
 		_vote_finished()
 
 func game_tick():
+	for p in game.get_players():
+		if p.is_frozen:
+			if not p.animation.is_playing():
+				p.is_killed = true
+				p.is_ghost = true
+				p.is_frozen = false
+				p.camera.zoom = Vector2(1.2, 1.2)
+				p.camera.position = Vector2(0, 0)
+				p.animation.play("RESET")
+	
 	if vote_in_session:
 		# Don't stay dead while there is the vote going on
 		for p in game.get_dead_players():
 			p.is_ghost = true
 			p.camera.offset = Vector2.ZERO
 		
-		vote_timer -= 10 * game.time_delta
+		if sp_has_voted:
+			vote_timer -= 300 * game.time_delta
+		else:
+			vote_timer -= (5 * every_vote) * game.time_delta
 		
 		if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 			game.custom_rpc.rpc({
@@ -356,10 +468,18 @@ func game_tick():
 
 func _vote_finished():
 	var fate_success = (vote_points > 0)
+	sp_has_voted = false
+	every_vote = 0
 	
-	if fate_success and Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
-		accused_player.kill_player()
-		accused_player.is_ghost = true
+	if fate_success:
+		accused_player.is_frozen = true
+		if accused_player.current_role == Global.PLAYER_ROLE.IMPOSTOR:
+			accused_player.animation.play("thrown_away_fake")
+		else:
+			accused_player.animation.play("thrown_away")
+		
+		#if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
+		#	accused_player.is_ghost = true
 	
 	if game.local_player:
 		var fatepanel = game.local_player.hud.get_node("accused_voting")
@@ -367,7 +487,7 @@ func _vote_finished():
 	
 	var smsg = ""
 	var sicon = load("res://assets/sprites/action_icons1.png")
-		
+	
 	if fate_success:
 		smsg = "Anyone has chosen to kill " + accused_player.player_name
 	else:
@@ -387,11 +507,17 @@ func _vote_finished():
 		
 	print("[Impostor] " + smsg)
 	
-	accused_player = null
 	vote_in_session = false
 	
 	for p in game.get_alive_players():
 		p.kill_cooldown = 800
 		p.visible = true
-		p.animation.play("RESET")
+		if not p.is_frozen:
+			p.animation.play("RESET")
+		
+		if p.is_bot:
+			p.is_running = false
+		
 		p.position = game.get_random_spawn().position
+	
+	accused_player = null

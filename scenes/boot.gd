@@ -4,6 +4,8 @@ func _ready():
 	print("--- Loading everything you need, please wait ---")
 	LoadingScreen.show_screen()
 	
+	handle_arguments_early()
+	
 	LoadingScreen.loadlabel.text = tr("Loading Custom Maps")
 	print("Loading Custom Maps")
 	Global.load_custom_maps(Global.maps_path)
@@ -45,7 +47,7 @@ func _ready():
 	
 	if DisplayServer.get_name() == "headless" and not Global.is_dedicated_server:
 		print("[WARN] This game was launched in headless mode,
-		 please use --dediserver while in headless mode to host a dedicated server")
+		 please use --dedicated while in headless mode to host a dedicated server")
 	
 	if not Global.is_dedicated_server:
 		print("Faked Cubes " + Global.version)
@@ -106,6 +108,26 @@ func handle_arguments() -> bool:
 		if arg == "--username":
 			Global.client_info["username"] = args[i+1]
 		
+		if arg == "--connect":
+			Global.server_ip = args[i+1]
+		
+		if arg == "--port":
+			Global.server_port = int(args[i+1])
+		
 		i += 1
 	
 	return handled
+
+func handle_arguments_early():
+	var i = 0
+	var args = OS.get_cmdline_args()
+	for arg in args:
+		if arg == "--data-path":
+			Global.server_path = args[i+1]
+			Global.maps_path = Global.server_path.path_join("maps")
+			Global.mods_path = Global.server_path.path_join("mods")
+			
+			DirAccess.make_dir_absolute(Global.maps_path)
+			DirAccess.make_dir_absolute(Global.mods_path)
+		
+		i += 1

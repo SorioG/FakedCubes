@@ -24,6 +24,8 @@ var current_gamemode = {"name": "Unknown", "base": BaseGamemode}:
 		
 		gamemode_node = val["base"].new()
 		gamemode_node.game = self
+		gamemode_node.name = val["name"]
+		add_child(gamemode_node)
 
 var gamemode_node: BaseGamemode
 
@@ -82,7 +84,9 @@ var server_info: Dictionary = {
 }
 
 ## List of player UUIDs that were banned by the server (with a reason)
-var ban_list: Array[Dictionary] = []
+var ban_list: Array = []
+
+var admin_list: Array = []
 
 var dediserver_confirmed = false
 
@@ -115,7 +119,9 @@ var webrtc_mp_peer: WebRTCMultiplayerPeer
 
 signal local_player_used_action(action: int)
 signal game_ended
+signal rcon_response(msg: String)
 
+var pathfinding: AStarGrid2D
 
 func spawn_player(is_local: bool, plr_name: String = "Player", is_new: bool = true, is_bot: bool = false) -> Player:
 	var plr = Global.PLAYER_NODE.instantiate()
@@ -181,7 +187,13 @@ func _ready():
 		
 		if spawn_local_player:
 			#local_player = spawn_player(true, "Player1")
-			multi_spawner.spawn(1)
+			multi_spawner.spawn({
+				"id": 1,
+				"uuid": Global.client_info["uuid"],
+				"platform": Global.client_info["platform"],
+				"modded": Global.has_mods_enabled,
+				"username": Global.client_info["username"]
+			})
 		
 		$bot_spawn_timer.connect("timeout", bot_spawn)
 		$bot_spawn_timer.start()
@@ -230,7 +242,13 @@ func _ready():
 		
 		# Spawn a local player unless we are hosting a dedicated server
 		if not Global.is_dedicated_server:
-			multi_spawner.spawn(1)
+			multi_spawner.spawn({
+				"id": 1,
+				"uuid": Global.client_info["uuid"],
+				"platform": Global.client_info["platform"],
+				"modded": Global.has_mods_enabled,
+				"username": Global.client_info["username"]
+			})
 			
 			server_info["name"] = Global.client_info["username"] + "'s server"
 		
@@ -300,6 +318,8 @@ func _ready():
 		
 		$dediserver_timer.start()
 	
+	load_server_data()
+	
 	pause_bg.visible = false
 	pause_win.visible = false
 	$hud/userinfo.visible = false
@@ -307,6 +327,7 @@ func _ready():
 	$hud/menu.connect("pressed", _pause_pressed)
 	$hud/PauseWindow/btns/resume.connect("pressed", _resume_pressed)
 	$hud/PauseWindow/btns/quit.connect("pressed", _leave_game)
+	$hud/PauseWindow/btns/rcon.connect("pressed", _rcon_pressed)
 
 func _pause_pressed():
 	pause_bg.visible = true
@@ -339,8 +360,18 @@ func _resume_pressed():
 	if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
 		get_tree().paused = false
 
+func _rcon_pressed():
+	local_player.hud.get_node("RemoteConsole").popup_centered()
+	_resume_pressed()
+
 func _leave_game():
 	get_tree().set_deferred("paused", false)
+	
+	if not Global.is_dedicated_server:
+		Global.save_user_config() # Automatically save user config when leaving the game
+	
+	if Global.can_save_config and Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
+		save_server_data()
 	
 	Global.net_mode = Global.GAME_TYPE.SINGLEPLAYER
 	
@@ -370,6 +401,30 @@ func parse_server_config():
 	
 	current_gamemode = Global.game_modes[s_gamemode]
 	gamemode_idx = s_gamemode
+
+func save_server_data():
+	var ban_list_file = FileAccess.open(Global.server_path.path_join("banlist.json"), FileAccess.WRITE)
+	ban_list_file.store_string(JSON.stringify(ban_list))
+	ban_list_file.close()
+	
+	var admin_list_file = FileAccess.open(Global.server_path.path_join("admins.json"), FileAccess.WRITE)
+	admin_list_file.store_string(JSON.stringify(admin_list))
+	admin_list_file.close()
+
+func load_server_data():
+	var ban_list_file = FileAccess.open(Global.server_path.path_join("banlist.json"), FileAccess.READ)
+	if ban_list_file:
+		var parsed_ban_list = JSON.parse_string(ban_list_file.get_as_text())
+		if parsed_ban_list:
+			ban_list = parsed_ban_list
+		ban_list_file.close()
+	
+	var admin_list_file = FileAccess.open(Global.server_path.path_join("admins.json"), FileAccess.READ)
+	if admin_list_file:
+		var parsed_admin_list = JSON.parse_string(admin_list_file.get_as_text())
+		if parsed_admin_list:
+			admin_list = parsed_admin_list
+		admin_list_file.close()
 
 func change_to_lobby():
 	if custom_lobby_path.is_empty():
@@ -411,13 +466,56 @@ func net_user_message(msg: String):
 	var player: Player = players_node.get_node_or_null("Player" + str(id))
 	if player:
 		if not Global.is_dedicated_server:
-			var avatar = ImageTexture.create_from_image(player.get_still_image())
+			var avatar = ImageTexture.create_from_image(get_player_chat_still_image(player, msg))
 			
 			chat_window.add_message(player.player_name, msg, avatar)
 		
 		print("[Chat] " + player.player_name + ": " + msg)
 	else:
 		push_warning("Someone typed a message, but player does not exist")
+
+func get_player_chat_still_image(player: Player, message: String):
+	var body_type := Global.MOOD_TYPE.NORMAL
+	var eye_type := Global.MOOD_TYPE.NORMAL
+	var mouth_type := Global.MOOD_TYPE.NORMAL
+	
+	# Mood changes depending which words contain in the message
+	if message.contains(":)"):
+		eye_type = Global.MOOD_TYPE.HAPPY
+		mouth_type = Global.MOOD_TYPE.HAPPY
+	
+	elif message.contains(":D") or message.contains("lol"):
+		eye_type = Global.MOOD_TYPE.EXCITED
+		mouth_type = Global.MOOD_TYPE.EXCITED
+	
+	elif message.contains(":|"):
+		eye_type = Global.MOOD_TYPE.BORED
+		mouth_type = Global.MOOD_TYPE.BORED
+	
+	elif message.contains(":O") or message.contains("O_O"):
+		eye_type = Global.MOOD_TYPE.SCARED
+		mouth_type = Global.MOOD_TYPE.SCARED
+	
+	elif message.contains("report") or message.contains("sus"):
+		body_type = Global.MOOD_TYPE.REPORT
+		eye_type = Global.MOOD_TYPE.REPORT
+		mouth_type = Global.MOOD_TYPE.REPORT
+	
+	elif message.contains(">:("):
+		body_type = Global.MOOD_TYPE.KILL
+		eye_type = Global.MOOD_TYPE.KILL
+		mouth_type = Global.MOOD_TYPE.KILL
+	
+	elif message.contains(":("):
+		eye_type = Global.MOOD_TYPE.HAPPY
+		mouth_type = Global.MOOD_TYPE.DEAD
+	
+	#elif message.contains(":random_face:"):
+	#	body_type = randi_range(0,8)
+	#	eye_type = randi_range(0,8)
+	#	mouth_type = randi_range(0,8)
+	
+	return player.get_still_image(body_type, eye_type, mouth_type)
 
 @rpc("authority", "call_local", "reliable")
 func net_server_message(msg: String):
@@ -473,20 +571,19 @@ func _on_peer_left(id: int):
 
 func bot_spawn():
 	var size = bot_players.size()
-	var bnam = name_generator.new_name()
+	var bnam = Global.bot_names.pick_random()
 	if size < num_bots:
 		#if Global.net_mode == Global.GAME_TYPE.SINGLEPLAYER:
 		#	var bot = spawn_player(false, bnam[1], true, true)
 		
 		#	bot_players.push_back(bot)
 		#elif Global.net_mode == Global.GAME_TYPE.MULTIPLAYER_HOST:
-		bot_mp_spawner.spawn(bnam[1])
+		bot_mp_spawner.spawn(bnam+"_"+str(randi_range(1,99999)))
 	
 	elif size > num_bots:
 		var bot = bot_players.pop_back()
 		
 		bot.disappear()
-		
 
 func net_bot_spawn(nam: String):
 	var player := Global.PLAYER_NODE.instantiate()
@@ -550,6 +647,8 @@ func _process(_delta):
 		
 		if Input.is_action_just_pressed("menu") and not pause_win.visible:
 			_pause_pressed()
+		
+		$hud/PauseWindow/btns/rcon.visible = local_player.is_admin
 	
 	if game_state == STATE.INGAME and not get_tree().paused:
 		gamemode_node.game_tick()
@@ -621,11 +720,27 @@ func change_map(m: String):
 	
 	move_players()
 	
+	setup_pathfinding()
+	
 	if Global.is_lua_enabled:
 		ModLoader.call_hook("map_changed", [m, old_name])
 
 func get_random_spawn():
 	return current_map.get_node("spawns").get_children().pick_random()
+
+func setup_pathfinding():
+	pathfinding = AStarGrid2D.new()
+	
+	var tilemap: TileMapLayer = current_map.get_node("TileMap")
+	
+	pathfinding.region = tilemap.get_used_rect()
+	pathfinding.cell_size = Vector2i(64, 64)
+	pathfinding.offset = Vector2(32, 32)
+	pathfinding.update()
+	
+	for cell in tilemap.get_used_cells():
+		var atlas = tilemap.get_cell_atlas_coords(cell)
+		pathfinding.set_point_solid(cell, (atlas.x == 1))
 
 func move_players():
 	var plrs = players_node.get_children()
@@ -633,6 +748,7 @@ func move_players():
 	for plr in plrs:
 		if plr is Player:
 			plr.position = get_random_spawn().position
+			plr.bot_is_pathfinding = false
 
 func get_local_player() -> Player:
 	if net_mode != Global.GAME_TYPE.SINGLEPLAYER:
@@ -645,10 +761,11 @@ func get_local_player2() -> Player:
 	return local_player2
 
 
-func net_spawn_player(id):
+func net_spawn_player(data):
 	var player := Global.PLAYER_NODE.instantiate()
+	var id = data["id"]
 	
-	player.net_id = id # Unused?
+	player.net_id = id
 	
 	# Make sure that this player plays the spawn animation (does not play if the player was already here)
 	player.has_spawned = true
@@ -666,6 +783,9 @@ func net_spawn_player(id):
 	
 	# Then we will emit this signal to let them know that the player has spawned.
 	emit_signal("player_spawned", player)
+	
+	player.client_uuid = data["uuid"]
+	player.client_modded = data["modded"]
 	
 	if multiplayer.is_server():
 		player.position = get_random_spawn().position
@@ -754,18 +874,45 @@ func get_players_by_role(role: int) -> Array[Player]:
 	
 	return res
 
+func get_admins() -> Array[Player]:
+	var res: Array[Player] = []
+	
+	for plr in get_players():
+		if plr.is_admin:
+			res.append(plr)
+	
+	return res
+
+func get_player_by_name(username: String) -> Player:
+	for plr in get_players():
+		if plr.player_name.to_lower() == username.to_lower():
+			return plr
+		if plr.player_name.to_lower().begins_with(username):
+			return plr
+	
+	return null
+
+func get_player_by_uuid(uuid: String) -> Player:
+	for plr in get_players():
+		if plr.client_uuid == uuid:
+			return plr
+	
+	return null
+
 func show_role_reveal():
 	# Make the reveal visible even without the player (to stop the bots from moving)
 	$hud/role_reveal.visible = true
 	
 	if local_player:
-		$hud/role_reveal/role_player.set_skin(local_player.get_skin()) # Try to match player's skin
-		$hud/role_reveal/role_player.animation.play("idle2")
+		#$hud/role_reveal/role_player.set_skin(local_player.get_skin()) # Try to match player's skin
+		#$hud/role_reveal/role_player.animation.play("idle2")
+		
+		$hud/role_reveal/player_image.texture = ImageTexture.create_from_image(local_player.get_still_image())
 		
 		if not multiplayer.is_server():
 			$hud/role_reveal/role_text.text = tr("Waiting for server...")
 			
-			await local_player.get_node("ServerSyncer").synchronized
+			await get_tree().physics_frame
 		
 		gamemode_node.role_reveal($hud/role_reveal/role_text, $hud/role_reveal/role_player)
 	
@@ -789,6 +936,8 @@ func end_game():
 	
 	reset_players()
 	
+	gamemode_node.game_end()
+	
 	if multiplayer.is_server():
 		net_end_game.rpc(winning_role)
 	#	multiplayer.multiplayer_peer.refuse_new_connections = false
@@ -808,12 +957,26 @@ func show_results():
 	
 	gamemode_node.show_results($hud/role_reveal/role_text, $hud/role_reveal/role_player)
 	
+	var player := local_player
+	var body_type := Global.MOOD_TYPE.NORMAL
+	var eye_type := Global.MOOD_TYPE.NORMAL
+	var mouth_type := Global.MOOD_TYPE.NORMAL
+	
 	# FIXME: This works fine in singleplayer or as a server, but random player cannot be choosed by winning role
 	# when playing as a client
 	if get_players_by_role(winning_role).size() > 0:
-		$hud/role_reveal/role_player.set_skin(get_players_by_role(winning_role).pick_random().get_skin())
-	else:
-		$hud/role_reveal/role_player.set_skin(local_player.get_skin())
+		player = get_players_by_role(winning_role).pick_random()
+	
+	if winning_role == Global.PLAYER_ROLE.IMPOSTOR:
+		body_type = Global.MOOD_TYPE.KILL
+		eye_type = Global.MOOD_TYPE.KILL
+		mouth_type = Global.MOOD_TYPE.HAPPY
+	elif winning_role == Global.PLAYER_ROLE.INNOCENT:
+		eye_type = Global.MOOD_TYPE.HAPPY
+		mouth_type = Global.MOOD_TYPE.HAPPY
+	
+	var still_image = player.get_still_image(body_type, eye_type, mouth_type)
+	$hud/role_reveal/player_image.texture = ImageTexture.create_from_image(still_image)
 
 func get_alive_players() -> Array[Player]:
 	var res: Array[Player] = []
@@ -853,6 +1016,7 @@ func reset_players():
 func reset_player(plr: Player, reset_role: bool = true):
 	plr.is_killed = false
 	plr.camera.offset = Vector2()
+	plr.camera.zoom = Vector2(1.2, 1.2)
 	if reset_role:
 		plr.current_role = Global.PLAYER_ROLE.NONE
 	
@@ -860,6 +1024,7 @@ func reset_player(plr: Player, reset_role: bool = true):
 	plr.is_idle = false
 	plr.is_ghost = false
 	plr.visible = true
+	plr.bot_is_pathfinding = false
 	
 	if multiplayer.is_server():
 		plr.net_reset_player.rpc(reset_role)
@@ -942,6 +1107,9 @@ func _on_connected():
 func _exit_tree():
 	if lobby_client is WebSocketPeer and lobby_client.get_ready_state() == WebSocketPeer.STATE_OPEN:
 		lobby_client.close()
+	
+	if Global.is_dedicated_server:
+		save_server_data()
 
 @rpc("call_remote", "reliable")
 func net_end_game(winner: int):
@@ -988,6 +1156,8 @@ func load_custom_map(path: String):
 		$map.add_child(cmap)
 		
 		move_players()
+		
+		setup_pathfinding()
 		
 		if multiplayer.is_server():
 			var file = FileAccess.open(path, FileAccess.READ)
@@ -1097,7 +1267,13 @@ func net_client_info(info: Dictionary):
 		print("[Game] " + username + " has joined the game (platform: " + platform + ", modded: " + str(modded) + ")")
 		# Now that we have successfully checked the info, we will need to spawn this player.
 		# Without doing it so, the player would get stuck on the loading screen.
-		multi_spawner.spawn(id)
+		multi_spawner.spawn({
+			"id": id,
+			"uuid": uuid,
+			"platform": platform,
+			"modded": modded,
+			"username": username
+		})
 		net_server_info.rpc_id(id, server_info)
 	else:
 		if username:
@@ -1117,6 +1293,25 @@ func net_info_fail(msg: String):
 	Global.alert(msg, tr("Connection Failed"))
 	
 	_leave_game()
+
+@rpc("any_peer", "reliable", "call_local")
+func net_rcon_command(cmd: String):
+	var id = multiplayer.get_remote_sender_id()
+	var player: Player = players_node.get_node_or_null("Player" + str(id))
+	if player:
+		if not player.is_admin:
+			print("[WARN] " + player.player_name + " tried to send a RCON command, but this player is not a admin")
+			return
+		
+		print("[RCON] " + player.player_name + " sent a command: " + cmd)
+		_handle_command(cmd.strip_edges().split(" "), rcon_player_response.bind(id))
+
+@rpc("any_peer", "reliable", "call_local")
+func net_rcon_response(res: String):
+	rcon_response.emit(res)
+
+func rcon_player_response(res: String, id: int):
+	net_rcon_response.rpc_id(id, res)
 
 @rpc("authority", "reliable", "call_local")
 func net_server_info(info: Dictionary):
@@ -1149,6 +1344,12 @@ func get_ban_reason(uuid: String) -> String:
 				return "no reason"
 	
 	return "not banned"
+
+func ban_uuid(uuid: String, reason: String):
+	ban_list.append({
+		"uuid": uuid,
+		"reason": reason
+	})
 
 func _update_public():
 	$ms_requests/UpdateRequest.request(
@@ -1218,24 +1419,28 @@ func send_player_message(msg: String):
 
 func _handle_command(args: Array[String], cb: Callable):
 	if args[0] == "list":
-		var plist = str(get_players().size()) + " players online:\n"
-		for plr in get_players():
-			var pname = plr.player_name
+		if get_players().size() < 1:
+			cb.call("No Players are currently online in this server")
+		else:
+			var plist = str(get_players().size()) + " players online:\n"
+			for plr in get_players():
+				var pname = plr.player_name
+				
+				if plr.is_admin:
+					pname += " (admin)"
+				
+				if plr.is_bot:
+					pname += " (bot)"
+				
+				if plr.is_killed:
+					pname += " (dead)"
+				
+				if game_state == STATE.INGAME:
+					pname += " (role: " + str(plr.current_role) + ")"
+				
+				plist += pname + "\n"
 			
-			if not plr.is_bot:
-				pname += " (id: " + str(plr.net_id) + ")"
-			else:
-				pname += " (bot)"
-			
-			if plr.is_killed:
-				pname += " (dead)"
-			
-			if game_state == STATE.INGAME:
-				pname += " (role: " + str(plr.current_role) + ")"
-			
-			plist += pname + "\n"
-		
-		cb.call(plist)
+			cb.call(plist)
 	
 	if args[0] == "gamemode":
 		if args.size() == 1:
@@ -1252,6 +1457,7 @@ func _handle_command(args: Array[String], cb: Callable):
 			else:
 				current_gamemode = Global.game_modes[nam]
 				gamemode_idx = nam
+				net_change_gamemode.rpc(gamemode_idx)
 				
 				cb.call("Changed Gamemode to " + current_gamemode["name"])
 	
@@ -1270,6 +1476,59 @@ func _handle_command(args: Array[String], cb: Callable):
 		
 		_on_start_pressed()
 	
+	if args[0] == "promote":
+		if args.size() == 1:
+			cb.call("You must specify the player name before promoting")
+			return
+		
+		var player = get_player_by_name(args[1])
+		if not player:
+			cb.call("Cannot find a player with that name")
+			return
+		if player.is_bot:
+			cb.call("You cannot promote a bot!")
+			return
+		if player.is_admin:
+			cb.call("This player is already a admin!")
+			return
+		
+		admin_list.append(player.client_uuid)
+		
+		player.is_admin = true
+		
+		cb.call("This player is now a admin")
+	
+	if args[0] == "demote":
+		if args.size() == 1:
+			cb.call("You must specify the player name before demoting")
+			return
+		
+		var player = get_player_by_name(args[1])
+		if not player:
+			cb.call("Cannot find a player with that name")
+			return
+		if player.is_bot:
+			cb.call("You cannot demote a bot!")
+			return
+		if not player.is_admin:
+			cb.call("This player is not a admin!")
+			return
+		
+		admin_list.erase(player.client_uuid)
+		
+		player.is_admin = false
+		
+		cb.call("This player is no longer a admin")
+	
+	if args[0] == "say":
+		var msg = args.slice(1)
+		if msg.size() == 0:
+			cb.call("You must specify the message before using this command")
+			return
+		var msg_text = " ".join(msg)
+		
+		net_server_message.rpc(msg_text)
+	
 	if args[0] == "help":
 		var clist = "List of commands:\n"
 		
@@ -1277,7 +1536,11 @@ func _handle_command(args: Array[String], cb: Callable):
 		clist += "gamemode [index] - Change the gamemode, omit the index to get the current one\n"
 		clist += "bots [count] - Change or get the bot count\n"
 		clist += "start - Forcefully start the game\n"
-		clist += "quit - Closes the server\n"
+		clist += "promote <player> - Makes this player become a admin\n"
+		clist += "demote <player> - Makes this player no longer a admin\n"
+		clist += "say <message> - Broadcasts the message to all players as a server\n"
+		if Global.is_dedicated_server:
+			clist += "quit - Closes the server\n"
 		
 		cb.call(clist)
 

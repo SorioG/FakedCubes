@@ -26,6 +26,8 @@ class_name Player
 @export var has_spawned = false
 @export var net_id = 1
 
+@export var is_admin = false
+
 ## The player has paused their game or using the computer.
 ## This will be used to indicate that the player is busy (shows thinking animation).
 @export var is_paused = false
@@ -84,6 +86,21 @@ var vc_effect: AudioEffectCapture
 var hud_pickplayer_tag: String = ""
 
 var bot_witness_killer: Player
+var bot_found_player: Player
+var bot_random_accuse = false
+var bot_saw_dead_player: Player
+var bot_move_to_position: Vector2
+var bot_is_pathfinding = false
+var bot_pathfind_list: PackedVector2Array
+var bot_pathfind_index: int = 0
+var bot_pathfind_debug: Line2D
+var bot_pathfind_timeout = 200
+var bot_force_pathfind_pos: Vector2
+
+@export var client_uuid: String
+@export var client_modded: bool
+
+@export var is_frozen: bool = false
 
 signal hud_player_picked(plr: Player, tag: String)
 
@@ -109,8 +126,8 @@ func get_skin() -> Texture2D:
 	return $Character/Body.texture
 
 ## Gets a still image for the player's skin, useful for player avatars
-func get_still_image() -> Image:
-	return Global.get_skin_still_image(get_skin())
+func get_still_image(body_type: Global.MOOD_TYPE = Global.MOOD_TYPE.NORMAL, eye_type: Global.MOOD_TYPE = Global.MOOD_TYPE.NORMAL, mouth_type: Global.MOOD_TYPE = Global.MOOD_TYPE.NORMAL) -> Image:
+	return Global.get_skin_still_image(get_skin(), body_type, eye_type, mouth_type)
 
 ## Sets the hat that the player will currently wear
 func set_hat(tex: Texture2D) -> bool:
@@ -169,8 +186,6 @@ func _ready():
 	if not c_game:
 		if get_game():
 			c_game = get_game()
-		else:
-			c_game = Node2D.new()
 	
 	if can_have_authority and c_game:
 		if is_multiplayer_authority() and not is_bot:
@@ -234,9 +249,25 @@ func _ready():
 		has_spawned = false
 	
 	
-	if Global.is_mobile:
-		$camera.zoom += Vector2(0.3, 0.3)
+	#if Global.is_mobile:
+	#	$camera.zoom += Vector2(0.3, 0.3)
 	
+	if c_game:
+		if not is_bot:
+			if c_game.admin_list.has(client_uuid):
+				is_admin = true
+			if net_id == 1:
+				# The host of the server is always a admin
+				is_admin = true
+
+@rpc("any_peer","call_local","reliable")
+func fake_say(msg: String):
+	if not Global.is_dedicated_server:
+		var avatar = ImageTexture.create_from_image(c_game.get_player_chat_still_image(self, msg))
+		
+		c_game.chat_window.add_message(player_name, msg, avatar)
+		
+	print("[Chat] " + player_name + ": " + msg)
 
 
 func _physics_process(_delta):
@@ -245,7 +276,7 @@ func _physics_process(_delta):
 			queue_free()
 		return
 	
-	if Global.stop_animations.has(animation.current_animation): 
+	if Global.stop_animations.has(animation.current_animation) or is_frozen: 
 		is_idle = false
 		return
 	
@@ -261,7 +292,7 @@ func _physics_process(_delta):
 	
 	if is_local_player:
 		# Local Player (player is controlling the character)
-		if not get_node("ui/HUD/gameinfo").visible and not c_game.pause_win.visible:
+		if not check_paused():
 			
 			move_x = Input.get_action_strength(action_prefix+"move_right") - Input.get_action_strength(action_prefix+"move_left")
 			move_y = Input.get_action_strength(action_prefix+"move_down") - Input.get_action_strength(action_prefix+"move_up")
@@ -310,7 +341,8 @@ func _physics_process(_delta):
 	
 	if is_killed:
 		if not is_ghost:
-			$camera.offset += Vector2(move_x, move_y) * 30
+			if not animation.is_playing():
+				$camera.offset += Vector2(move_x, move_y) * 30
 			
 			move_x = 0
 			move_y = 0
@@ -322,17 +354,32 @@ func _physics_process(_delta):
 			is_killed = false
 			is_ghost = false
 			$camera.offset = Vector2.ZERO
+			animation.play("RESET")
 	
 	if is_running:
 		velocity = Vector2(move_x, move_y) * MAX_SPRINT_VELOCITY
 	else:
 		velocity = Vector2(move_x, move_y) * MAX_VELOCITY
 	
+	if c_game is Game:
+		if c_game.local_player:
+			# Make all of the ghosts only visible to other ghosts
+			if is_ghost:
+				character.visible = (c_game.local_player.is_ghost)
+			else:
+				character.visible = true
 	
 	move_and_slide()
 	
 	if can_animate:
 		set_animation()
+
+func check_paused() -> bool:
+	if get_node("ui/HUD/gameinfo").visible: return true
+	if get_node("ui/HUD/RemoteConsole").visible: return true
+	if c_game.pause_win.visible: return true
+	if not c_game.can_control_player(): return true
+	return false
 
 func set_animation():
 	
@@ -372,7 +419,11 @@ func set_animation():
 	
 
 func get_game() -> Game:
-	return get_node("../../")
+	var res = get_node("../../")
+	if res is Game:
+		return res
+	else:
+		return null
 
 
 @rpc("call_local", "reliable")
@@ -388,6 +439,7 @@ func do_action(num: int):
 			c_game.gamemode_node.player_do_action(self, num)
 
 func _do_action(num: int):
+	if is_paused: return
 	if Global.net_mode != Global.GAME_TYPE.SINGLEPLAYER:
 		do_action.rpc(num)
 	else:
@@ -416,9 +468,57 @@ func bot_tick() -> Array[int]:
 	return [move_x, move_y]
 
 func bot_walk_rand():
-	if Global.rand_chance(0.9):
-		bot_move_x = c_game.rng.randi_range(-1, 1)
-		bot_move_y = c_game.rng.randi_range(-1, 1)
+	if not bot_is_pathfinding:
+		if randi_range(1, 90) < 86: return
+		var tilemap: TileMapLayer = c_game.current_map.get_node("TileMap")
+		var tile_pos = tilemap.local_to_map(position)
+		var rect = tilemap.get_used_rect()
+		var move_to = Vector2i(randi_range(rect.position.x, rect.end.x),randi_range(rect.position.y, rect.end.y))
+		if bot_force_pathfind_pos:
+			move_to = tilemap.local_to_map(bot_force_pathfind_pos)
+			bot_force_pathfind_pos = Vector2.ZERO
+		
+		if not c_game.pathfinding.is_in_boundsv(move_to): return
+		var path_list = c_game.pathfinding.get_point_path(tile_pos, move_to)
+		if path_list.size() > 0:
+			bot_pathfind_list = path_list
+			bot_is_pathfinding = true
+			bot_pathfind_index = 0
+			bot_move_to_position = path_list[0]
+			bot_pathfind_debug = Line2D.new()
+			bot_pathfind_debug.points = path_list
+			#c_game.add_child(bot_pathfind_debug)
+	else:
+		bot_walk_to(bot_move_to_position)
+		
+		bot_pathfind_timeout -= 1
+		
+		if bot_pathfind_timeout < 1:
+			bot_pathfind_timeout = 20
+			bot_pathfind_index += 1
+		
+		if bot_pathfind_index >= bot_pathfind_list.size():
+			bot_is_pathfinding = false
+			bot_move_x = 0
+			bot_move_y = 0
+			bot_pathfind_timeout = 20
+			if is_instance_valid(bot_pathfind_debug):
+				bot_pathfind_debug.queue_free()
+		else:
+			bot_move_to_position = bot_pathfind_list[bot_pathfind_index]
+		
+		if position.distance_to(bot_move_to_position) < 17:
+			bot_pathfind_index += 1
+
+func bot_walk_to(pos: Vector2):
+	var direction = position.direction_to(pos) * 4
+	
+	bot_move_x = clampf(direction.x, -1.0, 1.0)
+	bot_move_y = clampf(direction.y, -1.0, 1.0)
+
+func bot_force_pathfind(pos: Vector2):
+	bot_is_pathfinding = false
+	bot_force_pathfind_pos = pos
 
 func bot_try_kill():
 	var plrs = get_players_nearby()
@@ -435,7 +535,7 @@ func bot_try_kill():
 		
 		if viewers >= 2: return
 	
-	if plrs.size() > 0 and Global.rand_chance(0.8):
+	if plrs.size() > 0:
 		for plr in plrs:
 			if plr.is_killed: continue
 			if plr.current_role == Global.PLAYER_ROLE.IMPOSTOR: continue
@@ -553,9 +653,9 @@ func net_load_custom_skin(_skin: String):
 	skin_name = "Custom"
 	custom_skin_data = _skin
 
-func kill_player():
+func kill_player(animation_name: String = "death"):
 	is_killed = true
-	animation.play("death")
+	animation.play(animation_name)
 	
 	if Global.is_lua_enabled:
 		ModLoader.call_hook("player_died", [self])

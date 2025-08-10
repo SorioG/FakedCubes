@@ -65,6 +65,12 @@ properties/4/replication_mode = 1
 properties/5/path = NodePath(".:is_ghost")
 properties/5/spawn = true
 properties/5/replication_mode = 2
+properties/6/path = NodePath(".:is_admin")
+properties/6/spawn = true
+properties/6/replication_mode = 2
+properties/7/path = NodePath(".:is_frozen")
+properties/7/spawn = true
+properties/7/replication_mode = 1
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kdog3"]
 size = Vector2(615, 421)
@@ -79,7 +85,6 @@ layer = 0
 visible = false
 
 [node name="HUD" parent="ui" node_paths=PackedStringArray("player") instance=ExtResource("5_nwqw0")]
-auto_translate_mode = 2
 player = NodePath("../..")
 
 [node name="Sounds" type="Node2D" parent="."]
@@ -141,7 +146,7 @@ position_smoothing_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
-"": ExtResource("6_sov8o")
+&"": ExtResource("6_sov8o")
 }
 
 [node name="username" type="Label" parent="."]

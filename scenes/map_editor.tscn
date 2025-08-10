@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://nrgqlhwwg26u"]
+[gd_scene load_steps=8 format=4 uid="uid://nrgqlhwwg26u"]
 
 [ext_resource type="Script" uid="uid://b71iohwbckl8g" path="res://scenes/map_editor.gd" id="1_gsom7"]
 [ext_resource type="Texture2D" uid="uid://dfgv02bmqcic7" path="res://assets/sprites/action_icons5.png" id="1_wsjbe"]
@@ -48,6 +48,7 @@ text = "File"
 switch_on_hover = true
 item_count = 6
 popup/item_0/text = "New"
+popup/item_0/id = 0
 popup/item_1/text = "Save"
 popup/item_1/id = 2
 popup/item_2/text = "Load"
@@ -65,6 +66,7 @@ text = "Object"
 switch_on_hover = true
 item_count = 2
 popup/item_0/text = "Add New Object"
+popup/item_0/id = 0
 popup/item_1/text = "Delete All Objects"
 popup/item_1/id = 1
 
@@ -74,6 +76,7 @@ text = "Game"
 switch_on_hover = true
 item_count = 1
 popup/item_0/text = "Playtest"
+popup/item_0/id = 0
 
 [node name="tools" type="PanelContainer" parent="hud"]
 offset_left = 21.0
@@ -138,6 +141,7 @@ initial_position = 2
 item_count = 4
 item_0/text = "Spawn"
 item_0/icon = ExtResource("3_gvt1n")
+item_0/id = 0
 item_1/text = "Computer"
 item_1/icon = ExtResource("4_jeabg")
 item_1/id = 1
@@ -154,6 +158,7 @@ dialog_text = "Are you sure you want to create a new map? All of your progress w
 
 [node name="customobjectfile" type="FileDialog" parent="hud"]
 title = "Add Custom Object"
+ok_button_text = "Open"
 mode_overrides_title = false
 file_mode = 0
 access = 2
@@ -177,6 +182,7 @@ filters = PackedStringArray("*.tscn ; Text Scenes")
 [node name="loadmapdiag" type="FileDialog" parent="hud"]
 title = "Save Map"
 size = Vector2i(326, 175)
+ok_button_text = "Open"
 mode_overrides_title = false
 file_mode = 0
 access = 1
@@ -188,6 +194,7 @@ initial_position = 2
 item_count = 1
 item_0/text = "Lobby"
 item_0/icon = ExtResource("4_jeabg")
+item_0/id = 0
 
 [node name="objectlist" type="ItemList" parent="hud"]
 visible = false
@@ -200,11 +207,11 @@ offset_right = 238.0
 offset_bottom = 309.0
 grow_vertical = 2
 
-[node name="map" type="TileMap" parent="."]
+[node name="map" type="TileMapLayer" parent="."]
 texture_filter = 1
+use_parent_material = true
+tile_map_data = PackedByteArray("AAD8//3/AAAAAAAAAAD8//7/AAAAAAAAAAD8////AAAAAAAAAAD8/wAAAAAAAAAAAAD8/wEAAAAAAAAAAAD9//3/AAAAAAAAAAD9//7/AAAAAAAAAAD9////AAAAAAAAAAD9/wAAAAAAAAAAAAD9/wEAAAAAAAAAAAD+//3/AAAAAAAAAAD+//7/AAAAAAAAAAD+////AAAAAAAAAAD+/wAAAAAAAAAAAAD+/wEAAAAAAAAAAAD///3/AAAAAAAAAAD///7/AAAAAAAAAAD/////AAAAAAAAAAD//wAAAAAAAAAAAAD//wEAAAAAAAAAAAAAAP3/AAAAAAAAAAAAAP7/AAAAAAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAABAP3/AAAAAAAAAAABAP7/AAAAAAAAAAABAP//AAAAAAAAAAABAAAAAAAAAAAAAAABAAEAAAAAAAAAAAACAP3/AAAAAAAAAAACAP7/AAAAAAAAAAACAP//AAAAAAAAAAACAAAAAAAAAAAAAAACAAEAAAAAAAAAAAD7//z/AAABAAAAAAD7//3/AAABAAAAAAD7//7/AAABAAAAAAD7////AAABAAAAAAD7/wAAAAABAAAAAAD7/wEAAAABAAAAAAD7/wIAAAABAAAAAAD8//z/AAABAAAAAAD8/wIAAAABAAAAAAD9//z/AAABAAAAAAD9/wIAAAABAAAAAAD+//z/AAABAAAAAAD+/wIAAAABAAAAAAD///z/AAABAAAAAAD//wIAAAABAAAAAAAAAPz/AAABAAAAAAAAAAIAAAABAAAAAAABAPz/AAABAAAAAAABAAIAAAABAAAAAAACAPz/AAABAAAAAAACAAIAAAABAAAAAAADAPz/AAABAAAAAAADAP3/AAABAAAAAAADAP7/AAABAAAAAAADAP//AAABAAAAAAADAAAAAAABAAAAAAADAAEAAAABAAAAAAADAAIAAAABAAAAAAA=")
 tile_set = ExtResource("2_fwyjl")
-format = 2
-layer_0/tile_data = PackedInt32Array(-131076, 0, 0, -65540, 0, 0, -4, 0, 0, 65532, 0, 0, 131068, 0, 0, -131075, 0, 0, -65539, 0, 0, -3, 0, 0, 65533, 0, 0, 131069, 0, 0, -131074, 0, 0, -65538, 0, 0, -2, 0, 0, 65534, 0, 0, 131070, 0, 0, -131073, 0, 0, -65537, 0, 0, -1, 0, 0, 65535, 0, 0, 131071, 0, 0, -196608, 0, 0, -131072, 0, 0, -65536, 0, 0, 0, 0, 0, 65536, 0, 0, -196607, 0, 0, -131071, 0, 0, -65535, 0, 0, 1, 0, 0, 65537, 0, 0, -196606, 0, 0, -131070, 0, 0, -65534, 0, 0, 2, 0, 0, 65538, 0, 0, -196613, 65536, 0, -131077, 65536, 0, -65541, 65536, 0, -5, 65536, 0, 65531, 65536, 0, 131067, 65536, 0, 196603, 65536, 0, -196612, 65536, 0, 196604, 65536, 0, -196611, 65536, 0, 196605, 65536, 0, -196610, 65536, 0, 196606, 65536, 0, -196609, 65536, 0, 196607, 65536, 0, -262144, 65536, 0, 131072, 65536, 0, -262143, 65536, 0, 131073, 65536, 0, -262142, 65536, 0, 131074, 65536, 0, -262141, 65536, 0, -196605, 65536, 0, -131069, 65536, 0, -65533, 65536, 0, 3, 65536, 0, 65539, 65536, 0, 131075, 65536, 0)
 
 [node name="camera" type="Camera2D" parent="."]
 

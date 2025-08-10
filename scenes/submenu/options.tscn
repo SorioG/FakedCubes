@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://du0jrediygcdg"]
+[gd_scene load_steps=3 format=3 uid="uid://du0jrediygcdg"]
+
+[ext_resource type="Script" uid="uid://dtqrlan7stqko" path="res://scenes/submenu/options.gd" id="1_mb812"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_pk7o2"]
 font_size = 24
@@ -6,6 +8,7 @@ outline_size = 5
 outline_color = Color(0, 0, 0, 1)
 
 [node name="Options" type="Node2D"]
+script = ExtResource("1_mb812")
 
 [node name="bg" type="CanvasLayer" parent="."]
 layer = -1
@@ -48,6 +51,48 @@ grow_vertical = 2
 tab_alignment = 1
 current_tab = 0
 
-[node name="Game" type="VBoxContainer" parent="ui/tabs"]
+[node name="Game" type="AspectRatioContainer" parent="ui/tabs"]
 layout_mode = 2
 metadata/_tab_index = 0
+
+[node name="Settings" type="VBoxContainer" parent="ui/tabs/Game"]
+layout_mode = 2
+
+[node name="Username" type="HBoxContainer" parent="ui/tabs/Game/Settings"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ui/tabs/Game/Settings/Username"]
+layout_mode = 2
+text = "Username:"
+
+[node name="Value" type="LineEdit" parent="ui/tabs/Game/Settings/Username"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AutoChangeName" type="CheckBox" parent="ui/tabs/Game/Settings"]
+layout_mode = 2
+text = "Automatically change my username when Discord is Open"
+flat = true
+alignment = 1
+
+[node name="Graphics" type="AspectRatioContainer" parent="ui/tabs"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Settings" type="VBoxContainer" parent="ui/tabs/Graphics"]
+layout_mode = 2
+
+[node name="ShowSelfName" type="CheckBox" parent="ui/tabs/Graphics/Settings"]
+layout_mode = 2
+text = "Always show my username in-game"
+flat = true
+alignment = 1
+
+[node name="Sound" type="AspectRatioContainer" parent="ui/tabs"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="Settings" type="VBoxContainer" parent="ui/tabs/Sound"]
+layout_mode = 2

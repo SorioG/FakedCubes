@@ -70,7 +70,9 @@ var freeze_animations: Array[String] = [
 var stop_animations: Array[String] = [
 	"appearing",
 	"reported",
-	"scared"
+	"scared",
+	"thrown_away",
+	"thrown_away_fake"
 ]
 
 var idle_animations: Array[String] = [
@@ -95,6 +97,28 @@ var game_modes: Array[Dictionary] = [
 	#	"icon": load("res://assets/sprites/action_icons9.png"),
 	#	"base": ImpostorGamemode
 	#}
+	{
+		"name": "Hide and Seek",
+		"icon": load("res://assets/sprites/action_icons10.png"),
+		"base": load("res://assets/scripts/HideAndSeekGamemode.gd")
+	}
+]
+
+var bot_names: Array[String] = [
+	"YoFolks",
+	"random_cube",
+	"totally_not_a_clone",
+	"gurt",
+	"YesImBot",
+	"NoImHuman",
+	"StareContest",
+	"KingBot",
+	"STRONG",
+	"YappingBot",
+	"Jake",
+	"Mike",
+	"Sane",
+	"AnotherComputer"
 ]
 
 var player_skins: Dictionary = GameData.player_skins
@@ -182,6 +206,7 @@ const WEBRTC_ICE_SERVERS := [
 ]
 
 var server_thread: Thread = Thread.new()
+var server_path = OS.get_executable_path().get_base_dir()
 
 signal discord_join_request(user)
 
@@ -196,15 +221,22 @@ func lua_fields():
 func _ready():
 	is_emulating_mobile = ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false) 
 	is_mobile = is_emulating_mobile or DisplayServer.is_touchscreen_available()
-	is_dedicated_server = OS.has_feature("dedicated_server") or ("--dediserver" in OS.get_cmdline_args() and OS.is_debug_build())
+	is_dedicated_server = OS.has_feature("dedicated_server")
+	
+	if "--dedicated" in OS.get_cmdline_args():
+		if DisplayServer.get_name() == "headless":
+			is_dedicated_server = true
+		else:
+			print("[WARN] Tried to use --dedicated while in non-headless mode")
 	
 	client_info["platform"] = OS.get_name()
 	
 	if is_dedicated_server:
-		maps_path = OS.get_executable_path().get_base_dir().path_join("maps")
-		mods_path = OS.get_executable_path().get_base_dir().path_join("mods")
-		
-		
+		maps_path = server_path.path_join("maps")
+		mods_path = server_path.path_join("mods")
+	else:
+		server_path = "user://server_data"
+		DirAccess.make_dir_absolute(server_path)
 	
 	#if ClassDB.class_exists("LuaAPI") and ClassDB.is_class_enabled("LuaAPI"):
 	if not OS.has_feature("DisableLua"):
@@ -351,10 +383,7 @@ func change_scene_file(scene: String):
 	
 
 func get_game() -> Game:
-	if has_node("../SplitScreen"):
-		return get_node_or_null("../SplitScreen/BG/players/PlayerScreen1/SubViewport/game")
-	else:
-		return get_node_or_null("../game")
+	return get_node_or_null("../game")
 
 func rand_chance(chanc: float) -> bool:
 	return (randf() > chanc)
@@ -380,7 +409,7 @@ func load_server_config():
 	var config := ConfigFile.new()
 	var config_version = 1
 	
-	var path = OS.get_executable_path().get_base_dir().path_join("config/server.cfg")
+	var path = server_path.path_join("server.cfg")
 	var force_save = false
 	var err = config.load(path)
 	
@@ -406,7 +435,7 @@ func load_server_config():
 		
 		# Discord-related Configuration
 		config.set_value("Discord", "allow_invites", true)
-		config.set_value("Discord", "show_server_name", true)
+		#config.set_value("Discord", "show_server_name", true)
 		
 		# Other Configuration
 		config.set_value("Misc", "config_version", config_version)
@@ -472,18 +501,18 @@ func _on_server_cmd(res: String):
 	print(res)
 
 
-func get_skin_still_image(skin: Texture2D) -> Image:
+func get_skin_still_image(skin: Texture2D, body_type: MOOD_TYPE = MOOD_TYPE.NORMAL, eye_type: MOOD_TYPE = MOOD_TYPE.NORMAL, mouth_type: MOOD_TYPE = MOOD_TYPE.NORMAL) -> Image:
 	# This might be almost complex, but this will get a image with character parts included.
 	var body_img = skin.get_image()
 	
-	var img = Image.create(64, 64, false, body_img.get_format())
+	var img = Image.create_empty(64, 64, false, body_img.get_format())
 	
 	#var rect = Rect2i(0, 0, 64, 64)
 	var dest = Vector2i(0, 0)
 	
-	img.blit_rect(body_img, Rect2i(0, 0, 64, 64), dest)
-	img.blend_rect(body_img, Rect2i(0, 64, 64, 64), dest)
-	img.blend_rect(body_img, Rect2i(0, 128, 64, 64), dest)
+	img.blit_rect(body_img, Rect2i(body_type * 64, 0, 64, 64), dest) # Body
+	img.blend_rect(body_img, Rect2i(eye_type * 64, 64, 64, 64), dest) # Eyes
+	img.blend_rect(body_img, Rect2i(mouth_type * 64, 128, 64, 64), dest) # Mouth
 	
 	return img
 

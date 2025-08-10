@@ -4,8 +4,8 @@
 
 [node name="BaseMap" type="Node2D"]
 
-[node name="TileMap" type="TileMap" parent="."]
+[node name="TileMap" type="TileMapLayer" parent="."]
+use_parent_material = true
 tile_set = ExtResource("1_cvkbq")
-format = 2
 
 [node name="spawns" type="Node2D" parent="."]

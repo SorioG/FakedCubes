@@ -2,4 +2,7 @@
 # This will start the dedicated server for development purposes.
 # You probably don't need this if you export this project to dedicated servers.
 
-godot --headless --dediserver "$@"
+mkdir -p ./server-data
+touch ./server-data/.gdignore
+
+godot --headless --dedicated --data-path $(pwd)/server-data "$@"

@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=18 format=3 uid="uid://b6ec3cstx1mas"]
+[gd_resource type="Theme" load_steps=19 format=3 uid="uid://b6ec3cstx1mas"]
 
 [sub_resource type="SystemFont" id="SystemFont_h2ns3"]
 font_names = PackedStringArray("Hack", "DejaVu Sans", "Sans-Serif")
@@ -47,7 +47,7 @@ shadow_color = Color(0, 0, 0, 0.360784)
 shadow_size = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_whixb"]
-bg_color = Color(0.6, 0.6, 0.6, 0.117647)
+bg_color = Color(0.6, 0.6, 0.6, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x5f83"]
 bg_color = Color(0.211765, 0.239216, 0.239216, 1)
@@ -82,6 +82,8 @@ border_color = Color(0.568627, 0.85098, 0.941176, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2gkeg"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q1jjh"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3eret"]
 content_margin_left = 5.0
 content_margin_right = 5.0
@@ -93,7 +95,7 @@ border_color = Color(0.054902, 0.054902, 0.054902, 1)
 corner_radius_top_left = 1
 corner_radius_top_right = 1
 expand_margin_left = 5.0
-expand_margin_top = 1.0
+expand_margin_top = 5.0
 expand_margin_right = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a8yui"]
@@ -103,7 +105,7 @@ border_width_top = 2
 border_width_right = 2
 corner_radius_top_left = 2
 corner_radius_top_right = 2
-expand_margin_left = 1.0
+expand_margin_left = 5.0
 expand_margin_top = 5.0
 expand_margin_right = 5.0
 
@@ -129,6 +131,7 @@ border_width_right = 1
 border_color = Color(0.32549, 0.32549, 0.32549, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
+expand_margin_left = 5.0
 expand_margin_top = 5.0
 expand_margin_right = 5.0
 
@@ -166,6 +169,7 @@ LineEdit/styles/read_only = SubResource("StyleBoxFlat_jcldk")
 ProgressBar/styles/background = SubResource("StyleBoxFlat_l4grn")
 ProgressBar/styles/fill = SubResource("StyleBoxFlat_uooec")
 TabBar/styles/tab_selected = SubResource("StyleBoxFlat_2gkeg")
+TabBar/styles/tab_unselected = SubResource("StyleBoxFlat_q1jjh")
 TabContainer/styles/tab_disabled = SubResource("StyleBoxFlat_3eret")
 TabContainer/styles/tab_focus = SubResource("StyleBoxFlat_a8yui")
 TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_a2ppa")

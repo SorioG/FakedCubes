@@ -1,18 +1,23 @@
-[gd_scene load_steps=16 format=3 uid="uid://k1i5wlt0ju76"]
+[gd_scene load_steps=21 format=3 uid="uid://k1i5wlt0ju76"]
 
 [ext_resource type="Script" uid="uid://d3egs1fs3kgw2" path="res://scenes/menu_screen.gd" id="1_38ftq"]
+[ext_resource type="Texture2D" uid="uid://2al81gggjrg4" path="res://assets/sprites/menu_icons1.png" id="2_sx8ls"]
 [ext_resource type="PackedScene" uid="uid://drioxemoktbtr" path="res://scenes/player/player.tscn" id="3_1v1pj"]
+[ext_resource type="Texture2D" uid="uid://cia5240q74xc" path="res://assets/sprites/menu_icons3.png" id="3_abkyv"]
 [ext_resource type="Texture2D" uid="uid://ilmyuxi1v6m3" path="res://assets/sprites/logo.png" id="3_egxal"]
-[ext_resource type="Texture2D" uid="uid://t1sj0gqipki8" path="res://assets/sprites/action_icons2.png" id="3_f27v6"]
 [ext_resource type="Texture2D" uid="uid://dat1rvmtmbl26" path="res://assets/sprites/action_icons8.png" id="4_n7unn"]
+[ext_resource type="Texture2D" uid="uid://bl8ejjb6cixq5" path="res://assets/sprites/menu_icons2.png" id="4_teb4y"]
+[ext_resource type="Texture2D" uid="uid://cew0vt6yrkgea" path="res://assets/sprites/menu_icons4.png" id="5_5d4c3"]
 [ext_resource type="Texture2D" uid="uid://bnkt07r1fjiyj" path="res://assets/sprites/action_icons4.png" id="5_g77bi"]
 [ext_resource type="Texture2D" uid="uid://bxqdpphqpeqk" path="res://assets/sprites/computer.png" id="5_t0mf4"]
+[ext_resource type="Texture2D" uid="uid://c5teo6fyv0t6g" path="res://assets/sprites/menu_icons5.png" id="6_n6a75"]
 [ext_resource type="Texture2D" uid="uid://ch0jlbqe5gjh0" path="res://assets/sprites/action_icons7.png" id="6_o5dxp"]
 [ext_resource type="Texture2D" uid="uid://dfgv02bmqcic7" path="res://assets/sprites/action_icons5.png" id="6_rtgfl"]
 [ext_resource type="AudioStream" uid="uid://c4hel8s01gyu0" path="res://assets/sounds/select2.ogg" id="8_p6wv7"]
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="9_ktiug"]
 [ext_resource type="Texture2D" uid="uid://d06pjycy5a67j" path="res://assets/sprites/discord-mark-blue.png" id="10_dvphd"]
 [ext_resource type="PackedScene" uid="uid://cxfxw68ocj3lb" path="res://scenes/modlist/mod_list.tscn" id="10_qi416"]
+[ext_resource type="PackedScene" uid="uid://ck3dirdhasoyl" path="res://scenes/player/userinfo.tscn" id="11_smlye"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_q113w"]
 outline_size = 5
@@ -74,31 +79,31 @@ alignment = 1
 [node name="singleplayer" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Singleplayer"
-icon = ExtResource("4_n7unn")
+icon = ExtResource("2_sx8ls")
 flat = true
 
 [node name="hostgame" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Host Game"
-icon = ExtResource("3_f27v6")
+icon = ExtResource("3_abkyv")
 flat = true
 
 [node name="joingame" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Join Game"
-icon = ExtResource("6_o5dxp")
+icon = ExtResource("4_teb4y")
 flat = true
 
 [node name="mods" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Mods"
-icon = ExtResource("6_rtgfl")
+icon = ExtResource("5_5d4c3")
 flat = true
 
 [node name="quitbtn" type="Button" parent="UI/menu/mbtns"]
 layout_mode = 2
 text = "Quit to Desktop"
-icon = ExtResource("5_t0mf4")
+icon = ExtResource("6_n6a75")
 flat = true
 
 [node name="Logo" type="TextureRect" parent="UI/menu"]
@@ -154,6 +159,7 @@ size = Vector2i(182, 144)
 item_count = 2
 item_0/text = "Skin Viewer"
 item_0/icon = ExtResource("5_g77bi")
+item_0/id = 0
 item_1/text = "Map Editor"
 item_1/icon = ExtResource("6_rtgfl")
 item_1/id = 1
@@ -210,10 +216,13 @@ offset_right = -14.0
 offset_bottom = -30.0
 grow_horizontal = 0
 
+[node name="userinfo" parent="UI" instance=ExtResource("11_smlye")]
+
 [node name="screen1" type="CanvasLayer" parent="."]
 layer = 2
 
 [node name="Control" type="Control" parent="screen1"]
+visible = false
 layout_mode = 3
 anchors_preset = 11
 anchor_left = 1.0
