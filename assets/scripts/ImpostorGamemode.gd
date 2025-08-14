@@ -38,9 +38,24 @@ var bot_accused_mercy_messages = [
 	"D:"
 ]
 
+# Messages when the bot knows the killer while the other bot doesn't know something during the accused voting
+# Also used for when players accuse the known killer.
+var bot_unknown_reply_messages = [
+	"Yep, that's the killer we're looking for, vote yes anyone!",
+	"Congrats, you found the faker >:)",
+	"If you dont know it, im going to use a application jumpscare on you, so yes, that's the killer",
+	"Time to say goodbye, the 'trying to be normal' player",
+	"CLICK YES, GO FOR IT!",
+	"Ahem, you are correct for that player",
+	"You are genius, another bot, or player!"
+]
+
 var vote_timer = MAX_VOTE_TIMER
 var vote_points = 0
 var every_vote = 0
+
+var tasks_completed = 0
+var max_tasks = 0
 
 # Singleplayer Only
 var sp_has_voted := false
@@ -62,6 +77,10 @@ func check_end_game() -> int:
 	if alive_impos < 1:
 		return Global.PLAYER_ROLE.INNOCENT
 	
+	# Game Ends when all of the tasks have completed (innocent wins)
+	if tasks_completed >= max_tasks:
+		return Global.PLAYER_ROLE.INNOCENT
+	
 	return Global.PLAYER_ROLE.NONE
 
 func player_join_early(player: Player):
@@ -72,6 +91,7 @@ func player_join_early(player: Player):
 func game_start():
 	vote_in_session = false
 	accused_player = null
+	tasks_completed = 0
 	
 	if not game.is_using_custom_map:
 		change_map("impostor1")
@@ -107,6 +127,8 @@ func game_start():
 		if player.current_role == Global.PLAYER_ROLE.IMPOSTOR: continue
 		player.current_role = choose_role_for_player(player)
 	
+	max_tasks = get_tree().get_nodes_in_group("TaskComputer").size()
+	
 	#if impostor_used > 0:
 	#	print("not enough impostors used")
 
@@ -114,6 +136,8 @@ func game_end():
 	for player in game.get_players():
 		player.animation.play("RESET")
 		player.bot_witness_killer = null
+		if player.is_bot:
+			player.is_paused = false
 	
 	if game.local_player:
 		var fatepanel = game.local_player.hud.get_node("accused_voting")
@@ -201,27 +225,39 @@ func bot_tick(bot: Player):
 		bot.bot_move_y = 0
 		return
 	
-	if bot.current_role == Global.PLAYER_ROLE.IMPOSTOR:
+	if bot.current_role == Global.PLAYER_ROLE.IMPOSTOR and not bot.bot_mimic_innocent:
 		var viewers = 0
 		var victim: Player
+		var saw_dead_player: Player
 		
 		for p in bot.get_players_in_view():
-			if p.is_killed: continue
+			if p.is_killed:
+				saw_dead_player = p
+				continue
 			if p.current_role == bot.current_role: continue
+			if p.is_paused: continue
 			viewers += 1
 			victim = p
 		
 		if viewers <= 1 and victim:
-			bot.bot_is_pathfinding = false
-			bot.bot_walk_to(victim.position)
-			
-			bot.bot_try_kill()
+			if not bot.is_ghost:
+				if bot.kill_cooldown < 1:
+					bot.is_running = true
+					bot.bot_is_pathfinding = false
+					bot.bot_walk_to(victim.position)
+					
+					bot.bot_try_kill()
+				else:
+					bot.is_running = false
+					bot.bot_walk_rand()
+		elif viewers >= 2 and saw_dead_player:
+			bot.bot_mimic_innocent = true
 		else:
 			bot.is_running = false
 			bot.bot_walk_rand()
 	else:
 		bot.is_running = (not is_fine)
-		bot.bot_walk_rand()
+		var is_impostor = (bot.current_role == Global.PLAYER_ROLE.IMPOSTOR)
 		
 		if is_fine:
 			# We're fine, as long as there is no faker killing in front of me.
@@ -231,6 +267,8 @@ func bot_tick(bot: Player):
 			
 			for p in bot.get_players_in_view():
 				if p.is_killed: continue
+				if is_impostor:
+					if p.current_role == bot.current_role: continue
 				viewers += 1
 			
 			for p in bot.get_players_in_view():
@@ -261,9 +299,79 @@ func bot_tick(bot: Player):
 				
 				if not need_sos:
 					bot.bot_witness_killer = bot
+			elif is_impostor and viewers <= 1:
+				bot.bot_mimic_innocent = false
+			else:
+				if bot.bot_target_interactable_object:
+					var task_is_completed = bot.bot_target_interactable_object.get("already_completed")
+					if task_is_completed:
+						bot.is_paused = false
+						bot.bot_target_interactable_object = null
+						return
+					
+					if not bot.bot_is_using_forced_pathfinding:
+						bot.bot_force_pathfind(bot.bot_target_interactable_object.position)
+					
+					var is_near = (bot.position.distance_to(bot.bot_target_interactable_object.position) < 42)
+					
+					if is_near:
+						if not bot.is_paused:
+							bot.is_paused = true
+							bot.bot_move_x = 0
+							bot.bot_move_y = 0
+							bot.bot_timer = randi_range(10, 1000)
+						else:
+							if bot.bot_timer < 1:
+								if is_impostor:
+									bot.is_paused = false
+									bot.bot_target_interactable_object = null
+								else:
+									var success = randi_range(1, 1000) < 800
+									var task_type = bot.bot_target_interactable_object.get("task_type")
+									if task_type == 1:
+										var num1 = randi_range(1, 10)
+										var num2 = randi_range(1, 10)
+										var res = randi_range(0, num1 + num2)
+										if res == (num1 + num2):
+											success = true
+										else:
+											success = false
+									if success:
+										#bot.animation.play("happy")
+										#tasks_completed += 1
+										game.custom_rpc.rpc({
+											"type": "bot_task_success",
+											"bot_path": str(bot.get_path()),
+											"node_path": str(bot.bot_target_interactable_object.get_path())
+										})
+										bot.is_paused = false
+										bot.bot_target_interactable_object = null
+									else:
+										#bot.animation.play("sad")
+										game.custom_rpc.rpc({
+											"type": "bot_task_fail",
+											"bot_path": str(bot.get_path()),
+										})
+										if randi_range(1, 10) < 6:
+											bot.is_paused = false
+											bot.bot_target_interactable_object = null
+							else:
+								bot.bot_timer -= 1
+					else:
+						bot.bot_walk_rand()
+						bot.is_paused = false
+				else:
+					bot.is_paused = false
+					bot.bot_walk_rand()
+				
+				if randi_range(1, 90) < 80:
+					if not bot.bot_target_interactable_object:
+						bot.bot_target_interactable_object = get_random_task_computer()
 		else:
 			# Panic, and rush to the report button if they're closely near one.
 			var target_btn = get_first_report_button()
+			
+			bot.is_paused = false
 			
 			has_found_button = (bot.position.distance_to(target_btn.position) < 42)
 			
@@ -280,7 +388,7 @@ func bot_tick(bot: Player):
 				
 				bot.bot_witness_killer = null
 			else:
-				if not bot.bot_is_pathfinding and not bot.bot_force_pathfind_pos:
+				if not bot.bot_is_using_forced_pathfinding:
 					bot.bot_force_pathfind(target_btn.position)
 				
 				bot.bot_walk_rand()
@@ -291,6 +399,9 @@ func get_first_report_button() -> InteractableObject:
 			return obj
 	
 	return null
+
+func get_random_task_computer() -> InteractableObject:
+	return get_tree().get_nodes_in_group("TaskComputer").pick_random()
 
 func hud_picked_player(plr: Player, tag: String, picker: Player):
 	if tag != "report": return
@@ -320,6 +431,12 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 			if plr == f: continue
 			if picker == f: continue
 			f.position = plr.position
+	
+	for f in game.get_players():
+		# Interrupt what they're doing
+		f.hud.get_node("TaskMath").hide()
+		f.hud.get_node("FakeTask").hide()
+		f.hud.get_node("pickplayer").hide()
 	
 	vote_in_session = true
 	vote_timer = MAX_VOTE_TIMER
@@ -372,27 +489,44 @@ func hud_picked_player(plr: Player, tag: String, picker: Player):
 				vote_points += 1
 		else:
 			# The bot doesn't know or witness the murderer yet, vote either yes or no
-			if randf_range(1, 10) > 9:
+			if randf_range(1, 9000) > 9900:
 				vote_points += 1
-			elif randf_range(1, 100) > 99:
+			elif randf_range(1, 10) > 9:
 				vote_points -= 1
 	
 	if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
 		if picker.is_bot:
 			if picker.bot_random_accuse or picker.bot_witness_killer == picker:
 				picker.fake_say.rpc(bot_unknown_report_messages.pick_random().format([plr.player_name]))
+				
+				for another_bot in game.get_bots():
+					if another_bot == picker: continue
+					if another_bot == plr: continue
+					if another_bot.bot_random_accuse: continue
+					if another_bot.bot_witness_killer == plr:
+						another_bot.fake_say.rpc(bot_unknown_reply_messages.pick_random())
+						break
 			else:
 				picker.fake_say.rpc(bot_witness_messages.pick_random().format([picker.bot_witness_killer.player_name, picker.bot_saw_dead_player.player_name]))
+		else:
+			for another_bot in game.get_bots():
+				if another_bot == plr: continue
+				if another_bot.bot_random_accuse: continue
+				if another_bot.bot_witness_killer == plr:
+					another_bot.fake_say.rpc(bot_unknown_reply_messages.pick_random())
+					break
+		
 		if plr.is_bot and randf_range(1, 8) > 6:
 			plr.fake_say.rpc(bot_accused_mercy_messages.pick_random())
 	
 	# Forget about what you witness, bots.
-	for bot in game.get_players():
-		if not bot.is_bot: continue
+	for bot in game.get_bots():
 		bot.bot_witness_killer = null
 		bot.bot_saw_dead_player = null
 		bot.bot_random_accuse = false
 		bot.bot_is_pathfinding = false
+		bot.bot_mimic_innocent = false
+		bot.is_paused = false
 	
 	# Let the clients know about votes set by bots, so the vote points are in sync.
 	if Global.net_mode != Global.GAME_TYPE.MULTIPLAYER_CLIENT:
@@ -427,6 +561,48 @@ func receive_custom_rpc(_data: Dictionary, _id: int):
 	if _data["type"] == "vote_finished":
 		vote_points = _data["points"]
 		_vote_finished()
+	
+	# Task-specific RPCs
+	if _data["type"] == "task_success":
+		var player = game.get_player_by_id(_id)
+		var obj = get_tree().root.get_node(NodePath(_data["node_path"]))
+		if player:
+			if not player.is_killed or player.is_killed and player.is_ghost:
+				if not player.is_ghost:
+					player.animation.play("happy2")
+				player.get_node("Sounds/task_complete").play()
+				tasks_completed += 1
+		if obj:
+			obj.already_completed = true
+			obj.get_node("sprite").texture = load("res://assets/sprites/task_computer_done.png")
+	if _data["type"] == "task_fail":
+		var player = game.get_player_by_id(_id)
+		if player:
+			if not player.is_killed or player.is_killed and player.is_ghost:
+				if not player.is_ghost:
+					player.animation.play("sad")
+				#tasks_completed += 1
+				player.get_node("Sounds/task_fail").play()
+	if _data["type"] == "bot_task_success":
+		var player = game.get_node_or_null(NodePath(_data["bot_path"]))
+		var obj = get_tree().root.get_node(NodePath(_data["node_path"]))
+		if player:
+			if not player.is_killed or player.is_killed and player.is_ghost:
+				if not player.is_ghost:
+					player.animation.play("happy2")
+				tasks_completed += 1
+				player.get_node("Sounds/task_complete").play()
+		if obj:
+			obj.already_completed = true
+			obj.get_node("sprite").texture = load("res://assets/sprites/task_computer_done.png")
+	if _data["type"] == "bot_task_fail":
+		var player = game.get_node_or_null(NodePath(_data["bot_path"]))
+		if player:
+			if not player.is_killed or player.is_killed and player.is_ghost:
+				if not player.is_ghost:
+					player.animation.play("sad")
+				#tasks_completed += 1
+				player.get_node("Sounds/task_fail").play()
 
 func game_tick():
 	for p in game.get_players():

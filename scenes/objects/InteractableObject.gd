@@ -12,7 +12,7 @@ var c_game: Game
 func _ready():
 	$touch_hint.visible = false
 	
-	c_game = get_game()
+	c_game = Global.get_game()
 	
 	if c_game is Game:
 		c_game.connect("local_player_used_action", _process_used)

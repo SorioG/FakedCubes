@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3 uid="uid://dn0nvco5uu7wi"]
+
+[ext_resource type="PackedScene" uid="uid://dp26ah4iltb1q" path="res://scenes/objects/interactable_object.tscn" id="1_44b10"]
+[ext_resource type="Script" uid="uid://dgghajdw4t5bn" path="res://scenes/objects/task_computer.gd" id="2_2g8ld"]
+[ext_resource type="Texture2D" uid="uid://dhhkjiv32xmgu" path="res://assets/sprites/task_computer.png" id="2_l0puo"]
+
+[node name="TaskComputer" groups=["TaskComputer"] instance=ExtResource("1_44b10")]
+script = ExtResource("2_2g8ld")
+
+[node name="sprite" parent="." index="0"]
+texture = ExtResource("2_l0puo")

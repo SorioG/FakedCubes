@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://dpswufreepa67"]
+[gd_scene load_steps=17 format=3 uid="uid://dpswufreepa67"]
 
 [ext_resource type="Texture2D" uid="uid://dcx05njwsiixq" path="res://assets/sprites/action_icons1.png" id="1_b5c1i"]
 [ext_resource type="Script" uid="uid://bb8557ifmp23b" path="res://scenes/player/player_hud.gd" id="1_hdqkj"]
 [ext_resource type="Texture2D" uid="uid://b47w0244b3fq4" path="res://assets/sprites/action_icons3.png" id="1_qokn0"]
+[ext_resource type="Script" uid="uid://dfaobf7iww84p" path="res://assets/scripts/multi_touch_button.gd" id="3_3oyur"]
 [ext_resource type="Texture2D" uid="uid://dh6nl4ila1rh1" path="res://assets/sprites/player-default.png" id="3_gm50e"]
 [ext_resource type="Texture2D" uid="uid://t1sj0gqipki8" path="res://assets/sprites/action_icons2.png" id="5_g4llw"]
 [ext_resource type="AudioStream" uid="uid://damvexp438gwf" path="res://assets/sounds/select1.ogg" id="6_4telq"]
@@ -29,6 +30,15 @@ outline_color = Color(0, 0, 0, 1)
 font_color = Color(0.698157, 0.124039, 0.164055, 1)
 outline_size = 5
 outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_3oyur"]
+font_size = 40
+
+[sub_resource type="LabelSettings" id="LabelSettings_qe5o5"]
+font_size = 20
+
+[sub_resource type="LabelSettings" id="LabelSettings_vwph5"]
+font_size = 14
 
 [node name="HUD" type="Control"]
 auto_translate_mode = 2
@@ -58,21 +68,25 @@ alignment = 2
 layout_mode = 2
 texture_normal = ExtResource("1_qokn0")
 stretch_mode = 5
+script = ExtResource("3_3oyur")
 
 [node name="btn3" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("1_qokn0")
 stretch_mode = 5
+script = ExtResource("3_3oyur")
 
 [node name="btn2" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("5_g4llw")
 stretch_mode = 5
+script = ExtResource("3_3oyur")
 
 [node name="btn1" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("1_b5c1i")
 stretch_mode = 5
+script = ExtResource("3_3oyur")
 
 [node name="gameinfo" type="PopupPanel" parent="."]
 auto_translate_mode = 2
@@ -372,3 +386,70 @@ scroll_following = true
 [node name="ConsoleInput" type="LineEdit" parent="RemoteConsole/VBox"]
 layout_mode = 2
 placeholder_text = "Type a command here"
+
+[node name="TaskMath" type="PopupPanel" parent="."]
+auto_translate_mode = 2
+initial_position = 2
+size = Vector2i(600, 500)
+auto_translate = false
+
+[node name="AspectRatio" type="AspectRatioContainer" parent="TaskMath"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 596.0
+offset_bottom = 496.0
+
+[node name="VBox" type="VBoxContainer" parent="TaskMath/AspectRatio"]
+layout_mode = 2
+alignment = 1
+
+[node name="MathProblem" type="Label" parent="TaskMath/AspectRatio/VBox"]
+layout_mode = 2
+text = "20 + 20"
+label_settings = SubResource("LabelSettings_3oyur")
+horizontal_alignment = 1
+
+[node name="Control" type="Control" parent="TaskMath/AspectRatio/VBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="Answer" type="SpinBox" parent="TaskMath/AspectRatio/VBox"]
+layout_mode = 2
+allow_greater = true
+alignment = 1
+
+[node name="SubmitButton" type="Button" parent="TaskMath/AspectRatio/VBox"]
+layout_mode = 2
+text = "Submit"
+
+[node name="FakeTask" type="PopupPanel" parent="."]
+auto_translate_mode = 2
+initial_position = 2
+size = Vector2i(607, 500)
+auto_translate = false
+
+[node name="AspectRatio" type="AspectRatioContainer" parent="FakeTask"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 603.0
+offset_bottom = 496.0
+
+[node name="VBox" type="VBoxContainer" parent="FakeTask/AspectRatio"]
+layout_mode = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="FakeTask/AspectRatio/VBox"]
+layout_mode = 2
+text = "FAKE"
+label_settings = SubResource("LabelSettings_qe5o5")
+horizontal_alignment = 1
+
+[node name="Control" type="Control" parent="FakeTask/AspectRatio/VBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="FakeTask/AspectRatio/VBox"]
+layout_mode = 2
+text = "(Don't bother, you're a impostor, best to do is to by pretending to do the task)"
+label_settings = SubResource("LabelSettings_vwph5")
+horizontal_alignment = 1

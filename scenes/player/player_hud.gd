@@ -12,6 +12,9 @@ var game: Game
 @onready var map_options: OptionButton = $gameinfo/tabs/Game/btns/custommap/option
 @onready var cmaplobby = $gameinfo/tabs/Game/btns/cmaplobby
 
+var task_math_correct_answer = 0
+var task_current_node_path: String
+
 func _ready():
 	
 	game = Global.get_game()
@@ -37,8 +40,9 @@ func _ready():
 	gameinfo.connect("about_to_popup", _opened_window)
 	
 	if Global.is_mobile:
-		actions.custom_minimum_size = Vector2(0, 200)
+		actions.custom_minimum_size = Vector2(0, 158)
 		actions.position.x -= 60
+		actions.position.y -= 80
 	
 	actions.get_node("btn1").connect("pressed", _pressed_button.bind(1))
 	actions.get_node("btn2").connect("pressed", _pressed_button.bind(2))
@@ -48,7 +52,7 @@ func _ready():
 	if Global.is_mobile:
 		for btn in actions.get_children():
 			if btn is TextureButton:
-				btn.custom_minimum_size = Vector2(96, 0)
+				btn.custom_minimum_size = Vector2(158, 0)
 	
 	$gameinfo/tabs/Player/TabContainer/Skin/VBoxContainer/skincustom/openskins.connect("pressed", _skin_directory_open)
 	$gameinfo/tabs/Game/btns/cmaplobby.connect("pressed", _custom_map_lobby)
@@ -56,6 +60,8 @@ func _ready():
 	$accused_voting/box/btns/yesbtn.connect("pressed", _vote_button.bind(true))
 	$accused_voting/box/btns/nobtn.connect("pressed", _vote_button.bind(false))
 	$RemoteConsole/VBox/ConsoleInput.connect("text_submitted", _rcon_input)
+	
+	$TaskMath/AspectRatio/VBox/SubmitButton.connect("pressed", _task_math_submit)
 
 func _vote_button(is_yes: bool):
 	$select.play()
@@ -217,10 +223,15 @@ func _process(_delta):
 	else:
 		is_starting = false
 	
+	if player.is_local_player:
+		actions.get_node("btn1").visible = false
+		
+		for obj in player.use_area.get_overlapping_areas():
+			if obj.get_parent().is_in_group("Interactable"):
+				actions.get_node("btn1").visible = true
+				break
 	
 	if not is_starting and is_instance_valid(player):
-		actions.get_node("btn1").visible = true
-		
 		actions.get_node("btn2").visible = false
 		actions.get_node("btn3").visible = false
 		actions.get_node("btn4").visible = false
@@ -301,3 +312,17 @@ func _rcon_input(cmd: String):
 
 func _rcon_output(res: String):
 	$RemoteConsole/VBox/ConsoleOutput.text += "\n" + res
+
+func _task_math_submit():
+	var answer = $TaskMath/AspectRatio/VBox/Answer.value
+	
+	if answer == task_math_correct_answer:
+		game.custom_rpc.rpc({
+			"type": "task_success",
+			"node_path": task_current_node_path
+		})
+	else:
+		game.custom_rpc.rpc({
+			"type": "task_fail"
+		})
+	$TaskMath.hide()

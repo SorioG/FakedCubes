@@ -11,6 +11,7 @@ class_name Player
 @onready var ui: CanvasLayer = $ui
 @onready var camera = $camera
 @onready var nametag: Label = $username
+@onready var use_area: Area2D = $use_area
 
 @export var manual_move_x = 0.0
 @export var manual_move_y = 0.0
@@ -96,6 +97,10 @@ var bot_pathfind_index: int = 0
 var bot_pathfind_debug: Line2D
 var bot_pathfind_timeout = 200
 var bot_force_pathfind_pos: Vector2
+var bot_is_using_forced_pathfinding = false
+var bot_mimic_innocent = false # Impostor Bots can also mimic innocent behaivour to be less suspicous
+var bot_target_interactable_object: InteractableObject
+var bot_timer = 0
 
 @export var client_uuid: String
 @export var client_modded: bool
@@ -377,6 +382,8 @@ func _physics_process(_delta):
 func check_paused() -> bool:
 	if get_node("ui/HUD/gameinfo").visible: return true
 	if get_node("ui/HUD/RemoteConsole").visible: return true
+	if get_node("ui/HUD/TaskMath").visible: return true
+	if get_node("ui/HUD/FakeTask").visible: return true
 	if c_game.pause_win.visible: return true
 	if not c_game.can_control_player(): return true
 	return false
@@ -477,6 +484,9 @@ func bot_walk_rand():
 		if bot_force_pathfind_pos:
 			move_to = tilemap.local_to_map(bot_force_pathfind_pos)
 			bot_force_pathfind_pos = Vector2.ZERO
+			bot_is_using_forced_pathfinding = true
+		else:
+			bot_is_using_forced_pathfinding = false
 		
 		if not c_game.pathfinding.is_in_boundsv(move_to): return
 		var path_list = c_game.pathfinding.get_point_path(tile_pos, move_to)
@@ -502,6 +512,7 @@ func bot_walk_rand():
 			bot_move_x = 0
 			bot_move_y = 0
 			bot_pathfind_timeout = 20
+			bot_is_using_forced_pathfinding = false
 			if is_instance_valid(bot_pathfind_debug):
 				bot_pathfind_debug.queue_free()
 		else:

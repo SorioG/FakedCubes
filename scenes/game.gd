@@ -268,6 +268,17 @@ func _ready():
 		
 		Global.start_server_thread()
 		
+		if Global.is_dedicated_server:
+			var rcon_password: String = Global.server_config.get_value("Server", "rcon_password", "")
+			var rcon_port: int = Global.server_config.get_value("Server", "rcon_port", 27015)
+			
+			if not rcon_password.is_empty():
+				$RCONServer.port = rcon_port
+				$RCONServer.password = rcon_password
+				$RCONServer.start()
+				$RCONServer.connect("command_received", _rcon_server_receive_command)
+				print("[RCON] RCON Server listening on port " + str(rcon_port))
+		
 		_update_server_info()
 		
 		if is_server_public:
@@ -324,10 +335,21 @@ func _ready():
 	pause_win.visible = false
 	$hud/userinfo.visible = false
 	
+	$hud/MobileSprintButton.visible = Global.is_mobile
+	
 	$hud/menu.connect("pressed", _pause_pressed)
 	$hud/PauseWindow/btns/resume.connect("pressed", _resume_pressed)
 	$hud/PauseWindow/btns/quit.connect("pressed", _leave_game)
 	$hud/PauseWindow/btns/rcon.connect("pressed", _rcon_pressed)
+
+func _rcon_server_receive_command(command: String, client_id: int):
+	#var rcon_msg = ""
+	_handle_command(
+		command.split(" "),
+		func(msg: String):
+			#rcon_msg = msg
+			$RCONServer.send_response(client_id, msg)
+	)
 
 func _pause_pressed():
 	pause_bg.visible = true
@@ -879,6 +901,15 @@ func get_admins() -> Array[Player]:
 	
 	for plr in get_players():
 		if plr.is_admin:
+			res.append(plr)
+	
+	return res
+
+func get_bots() -> Array[Player]:
+	var res: Array[Player] = []
+	
+	for plr in get_players():
+		if plr.is_bot:
 			res.append(plr)
 	
 	return res
@@ -1442,7 +1473,7 @@ func _handle_command(args: Array[String], cb: Callable):
 			
 			cb.call(plist)
 	
-	if args[0] == "gamemode":
+	elif args[0] == "gamemode":
 		if args.size() == 1:
 			cb.call("Current Gamemode is " + current_gamemode["name"])
 		else:
@@ -1461,7 +1492,7 @@ func _handle_command(args: Array[String], cb: Callable):
 				
 				cb.call("Changed Gamemode to " + current_gamemode["name"])
 	
-	if args[0] == "bots":
+	elif args[0] == "bots":
 		if args.size() == 1:
 			cb.call("Current Bot Count is " + str(num_bots))
 		else:
@@ -1469,14 +1500,19 @@ func _handle_command(args: Array[String], cb: Callable):
 			
 			cb.call("Changing the bot count to " + str(num_bots))
 	
-	if args[0] == "start":
+	elif args[0] == "start":
 		if game_state == STATE.INGAME:
 			cb.call("You can only start the game while in the lobby")
 			return
 		
-		_on_start_pressed()
+		var start_msg = can_start_game()
+		if start_msg == "OK":
+			_on_start_pressed()
+			cb.call("Successfully started the game")
+		else:
+			cb.call("Cannot start the game: {0}".format([start_msg]))
 	
-	if args[0] == "promote":
+	elif args[0] == "promote":
 		if args.size() == 1:
 			cb.call("You must specify the player name before promoting")
 			return
@@ -1498,7 +1534,7 @@ func _handle_command(args: Array[String], cb: Callable):
 		
 		cb.call("This player is now a admin")
 	
-	if args[0] == "demote":
+	elif args[0] == "demote":
 		if args.size() == 1:
 			cb.call("You must specify the player name before demoting")
 			return
@@ -1520,7 +1556,7 @@ func _handle_command(args: Array[String], cb: Callable):
 		
 		cb.call("This player is no longer a admin")
 	
-	if args[0] == "say":
+	elif args[0] == "say":
 		var msg = args.slice(1)
 		if msg.size() == 0:
 			cb.call("You must specify the message before using this command")
@@ -1528,8 +1564,9 @@ func _handle_command(args: Array[String], cb: Callable):
 		var msg_text = " ".join(msg)
 		
 		net_server_message.rpc(msg_text)
+		cb.call("Sent message '{0}' as a server".format([msg_text]))
 	
-	if args[0] == "help":
+	elif args[0] == "help":
 		var clist = "List of commands:\n"
 		
 		clist += "list - Get a list of players online\n"
@@ -1543,6 +1580,9 @@ func _handle_command(args: Array[String], cb: Callable):
 			clist += "quit - Closes the server\n"
 		
 		cb.call(clist)
+	
+	else:
+		cb.call("Unknown Command: '{0}', Type 'help' for a list of commands".format([" ".join(args)]))
 
 func _lobby_client_handle_packet(packet: Dictionary):
 	var ptype: String = packet["packet"]

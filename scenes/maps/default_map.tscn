@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=4 uid="uid://cpelqbuuvyb3s"]
+[gd_scene load_steps=5 format=4 uid="uid://cpelqbuuvyb3s"]
 
 [ext_resource type="TileSet" uid="uid://b4ktibyv5f65a" path="res://assets/tileset.tres" id="1_77fns"]
 [ext_resource type="PackedScene" uid="uid://cvb7cm5vgbl8q" path="res://scenes/objects/reportbutton.tscn" id="2_2kjf4"]
 [ext_resource type="Texture2D" uid="uid://b08h8pxsow8n" path="res://assets/sprites/gameicon.png" id="3_1ive7"]
+[ext_resource type="PackedScene" uid="uid://dn0nvco5uu7wi" path="res://scenes/objects/task_computer.tscn" id="4_xgynf"]
 
 [node name="default_map" type="Node2D"]
 
@@ -55,3 +56,62 @@ texture = ExtResource("3_1ive7")
 self_modulate = Color(1, 1, 1, 0.384314)
 position = Vector2(55, -220)
 texture = ExtResource("3_1ive7")
+
+[node name="task_computers" type="Node2D" parent="."]
+
+[node name="TaskComputer3" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(1031, -165)
+
+[node name="TaskComputer4" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(361, 1522)
+
+[node name="TaskComputer5" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-386, 517)
+
+[node name="TaskComputer6" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-1221, 1093)
+
+[node name="TaskComputer7" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-942, -228)
+
+[node name="TaskComputer8" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(1082, 1269)
+
+[node name="TaskComputer9" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(45, 1117)
+
+[node name="TaskComputer10" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(769, 501)
+
+[node name="TaskComputer11" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-911, 1547)
+
+[node name="TaskComputer12" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(1345, 602)
+
+[node name="TaskComputer" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-696, 1192)
+
+[node name="TaskComputer2" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(578, 717)
+
+[node name="TaskComputer13" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-386, 834)
+
+[node name="TaskComputer14" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(844, 1037)
+
+[node name="TaskComputer15" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(1358, 146)
+
+[node name="TaskComputer16" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(730, 280)
+
+[node name="TaskComputer17" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-1365, 568)
+
+[node name="TaskComputer18" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(-244, 1071)
+
+[node name="TaskComputer19" parent="task_computers" instance=ExtResource("4_xgynf")]
+position = Vector2(725, -262)

@@ -64,7 +64,8 @@ var freeze_animations: Array[String] = [
 	"kill",
 	"damage",
 	"happy",
-	"happy2"
+	"happy2",
+	"sad"
 ]
 
 var stop_animations: Array[String] = [
@@ -432,6 +433,8 @@ func load_server_config():
 		config.set_value("Server", "allow_custom_skins", true)
 		config.set_value("Server", "allow_modded_clients", true)
 		config.set_value("Server", "voice_chat", false)
+		config.set_value("Server", "rcon_port", Global.server_port+1)
+		config.set_value("Server", "rcon_password", "")
 		
 		# Discord-related Configuration
 		config.set_value("Discord", "allow_invites", true)

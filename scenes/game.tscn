@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://d146f4nvtxkbc"]
+[gd_scene load_steps=21 format=3 uid="uid://d146f4nvtxkbc"]
 
 [ext_resource type="Script" uid="uid://dlxxje5v3vuwq" path="res://scenes/game.gd" id="1_cppsc"]
 [ext_resource type="PackedScene" uid="uid://dmr0fcamx7t56" path="res://scenes/joystick/virtual_joystick.tscn" id="2_5bhqk"]
@@ -14,6 +14,9 @@
 [ext_resource type="PackedScene" uid="uid://ck3dirdhasoyl" path="res://scenes/player/userinfo.tscn" id="10_6mvyq"]
 [ext_resource type="AudioStream" uid="uid://cfh5136glfe3t" path="res://assets/sounds/space shield sounds - 5.wav" id="10_mwt1k"]
 [ext_resource type="AudioStream" uid="uid://bweypitflmlms" path="res://assets/sounds/space shield sounds - 9.wav" id="11_vhal8"]
+[ext_resource type="Texture2D" uid="uid://dpxjybx473wrs" path="res://assets/sprites/mobile-sprint-button.png" id="14_ca42v"]
+[ext_resource type="Script" uid="uid://dsurlppa1ce17" path="res://assets/scripts/rcon/rcon_server.gd" id="15_ir15t"]
+[ext_resource type="Script" uid="uid://dfaobf7iww84p" path="res://assets/scripts/multi_touch_button.gd" id="15_rysoc"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_5f05c"]
 outline_size = 5
@@ -105,6 +108,25 @@ texture = ExtResource("3_q77ue")
 
 [node name="Tip" parent="hud/Virtual Joystick/Base" index="0"]
 texture = ExtResource("4_wtewd")
+
+[node name="MobileSprintButton" type="TextureButton" parent="hud"]
+self_modulate = Color(1, 1, 1, 0.454902)
+custom_minimum_size = Vector2(80, 80)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -115.0
+offset_top = -121.0
+offset_right = -35.0
+offset_bottom = -41.0
+grow_horizontal = 0
+grow_vertical = 0
+texture_normal = ExtResource("14_ca42v")
+stretch_mode = 4
+script = ExtResource("15_rysoc")
+action = "run"
 
 [node name="role_reveal" type="Control" parent="hud"]
 visible = false
@@ -324,5 +346,8 @@ timeout = 3.0
 [node name="UpdateRequest" type="HTTPRequest" parent="ms_requests"]
 use_threads = true
 timeout = 3.0
+
+[node name="RCONServer" type="Node" parent="."]
+script = ExtResource("15_ir15t")
 
 [editable path="hud/Virtual Joystick"]
