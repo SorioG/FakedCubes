@@ -69,24 +69,28 @@ layout_mode = 2
 texture_normal = ExtResource("1_qokn0")
 stretch_mode = 5
 script = ExtResource("3_3oyur")
+action = "action3"
 
 [node name="btn3" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("1_qokn0")
 stretch_mode = 5
 script = ExtResource("3_3oyur")
+action = "action2"
 
 [node name="btn2" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("5_g4llw")
 stretch_mode = 5
 script = ExtResource("3_3oyur")
+action = "action1"
 
 [node name="btn1" type="TextureButton" parent="actions"]
 layout_mode = 2
 texture_normal = ExtResource("1_b5c1i")
 stretch_mode = 5
 script = ExtResource("3_3oyur")
+action = "use"
 
 [node name="gameinfo" type="PopupPanel" parent="."]
 auto_translate_mode = 2

@@ -224,12 +224,14 @@ func _process(_delta):
 		is_starting = false
 	
 	if player.is_local_player:
-		actions.get_node("btn1").visible = false
+		var is_near_interactable = false
 		
 		for obj in player.use_area.get_overlapping_areas():
 			if obj.get_parent().is_in_group("Interactable"):
-				actions.get_node("btn1").visible = true
+				is_near_interactable = true
 				break
+		
+		actions.get_node("btn1").visible = is_near_interactable
 	
 	if not is_starting and is_instance_valid(player):
 		actions.get_node("btn2").visible = false
